@@ -1,0 +1,20 @@
+# Secrets locaux : ne jamais publier
+.env
+.env.*
+!.env.example
+
+# Dépendances et fichiers générés
+node_modules/
+dist/
+build/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
