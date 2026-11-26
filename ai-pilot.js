@@ -10,7 +10,17 @@ module.exports = function register(app, sameOrigin, requireRole, notions) {
     const rules = {notion:100,enonce:2000,code:6000,erreur:1000,question:1000};
     if (!b || !Object.entries(rules).every(([k,n]) => typeof b[k]==='string' && b[k].length<=n && (k==='erreur'||b[k].trim())) || !notions.includes(b.notion) || b.fictif!==true) return res.status(400).json({message:'Saisie invalide ou confirmation des données fictives manquante.'});
     const key=process.env.ANTHROPIC_API_KEY, model=process.env.ANTHROPIC_MODEL;
-    if (!key || !model || !process.env.DATABASE_URL || process.env.AI_PILOT_ENABLED!=='true') return res.status(503).json({message:'Pilote IA désactivé ou configuration manquante.'});
+    const issues = [];
+    for (const name of ['ANTHROPIC_API_KEY','ANTHROPIC_MODEL','DATABASE_URL']) {
+      const value = process.env[name];
+      if (!value || !value.trim()) issues.push(name + ' absente ou vide');
+      else if (value !== value.trim()) issues.push(name + ' contient des espaces en bordure');
+    }
+    if (process.env.AI_PILOT_ENABLED !== 'true') issues.push('AI_PILOT_ENABLED doit valoir exactement true');
+    if (issues.length) {
+      console.warn('[AI_CONFIG]', issues.join('; '));
+      return res.status(503).json({message:'Configuration IA : ' + issues.join('; ') + '.'});
+    }
     if (busy) return res.status(429).json({message:'Une analyse est déjà en cours.'});
     busy=true;
     try {
