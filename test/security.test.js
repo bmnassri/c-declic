@@ -1,0 +1,16 @@
+'use strict';
+const {test,before,after}=require('node:test');
+const assert=require('node:assert/strict');
+Object.assign(process.env,{APP_PASSWORD:'test-student-only',TEACHER_PASSWORD:'test-teacher-only',SESSION_SECRET:'test-only-not-a-production-secret-123456',NODE_ENV:'test',AI_PILOT_ENABLED:'false',SUPERVISION_PILOT_ENABLED:'true'});
+delete process.env.RAILWAY_ENVIRONMENT;delete process.env.RAILWAY_PUBLIC_DOMAIN;delete process.env.DATABASE_URL;delete process.env.ANTHROPIC_API_KEY;
+const app=require('../server');
+let server,base;
+before(async()=>{server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));base='http://127.0.0.1:'+server.address().port;});
+after(()=>new Promise(r=>server.close(r)));
+const req=(path,options={})=>fetch(base+path,{redirect:'manual',...options});
+async function login(role){const r=await req('/connexion',{method:'POST',headers:{origin:base,'content-type':'application/json'},body:JSON.stringify({role,password:'test-'+role+'-only'})});assert.equal(r.status,303);return r.headers.get('set-cookie').split(';')[0];}
+const post=(path,cookie,body)=>req(path,{method:'POST',headers:{origin:base,cookie,'content-type':'application/json'},body:JSON.stringify(body)});
+test('accès anonyme et séparation des rôles',async()=>{assert.equal((await req('/api/enseignant/budget')).status,401);const cookie=await login('student');assert.equal((await req('/api/enseignant/budget',{headers:{cookie}})).status,403);assert.equal((await req('/enseignant',{headers:{cookie}})).status,403);});
+test('origine étrangère refusée et en-têtes',async()=>{const r=await req('/connexion',{method:'POST',headers:{origin:'https://example.invalid','content-type':'application/json'},body:'{}'});assert.equal(r.status,403);assert.equal(r.headers.get('x-frame-options'),'DENY');assert.equal(r.headers.get('cache-control'),'no-store');});
+test('isolation des demandes et refus sans IA',async()=>{const s=await login('student'),other=await login('student'),t=await login('teacher');const b={notion:'Boucles',enonce:'Test fictif',code:'int main(void){return 0;}',erreur:'',question:'Pourquoi ?',fictif:true};const r=await post('/api/supervision/demandes',s,b);assert.equal(r.status,201);const {id}=await r.json();assert.equal((await post('/api/supervision/'+id+'/dialogue',other,{action:'new'})).status,404);assert.equal((await post('/api/supervision/'+id+'/decision',s,{action:'reject'})).status,403);assert.equal((await post('/api/supervision/'+id+'/decision',t,{action:'approve',confirm:true,question:'Q',indice:'I'})).status,400);assert.equal((await post('/api/supervision/'+id+'/decision',t,{action:'reject'})).status,200);const list=await (await req('/api/supervision/mes-demandes',{headers:{cookie:s}})).json();assert.equal(list.requests[0].state,'rejected');assert.equal(list.requests[0].draft,undefined);await post('/deconnexion',s,{});assert.equal((await req('/api/supervision/mes-demandes',{headers:{cookie:s}})).status,401);});
+test('configuration financière et calcul de réservation',()=>{Object.assign(process.env,{ANTHROPIC_MODEL:'test-model',AI_BUDGET_MODEL:'test-model',AI_INPUT_EUR_PER_MTOK:'4',AI_OUTPUT_EUR_PER_MTOK:'20',AI_INPUT_TOKEN_CEILING:'16000'});assert.equal(require('../budget').config().reserve,76000);process.env.AI_BUDGET_MODEL='wrong';assert.throws(()=>require('../budget').config());});
