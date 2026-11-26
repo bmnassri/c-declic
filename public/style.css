@@ -18,3 +18,40 @@ input[type=password]{width:100%;font:inherit;padding:.75rem;border:1px solid #66
 #supervision .dialogue-question{background:#DFFAFF;border:1px solid #78CCFF;padding:1rem;border-radius:12px;white-space:pre-wrap}#supervision .dialogue-reply{background:#005157;color:#fff;padding:1rem;border-radius:12px;margin-left:clamp(0px,5vw,3rem);white-space:pre-wrap}#supervision details{margin:.75rem 0}#supervision textarea{display:block;margin-top:.4rem}
 
 #budget{background:white;border:1px solid #C1E7E3;border-radius:16px;padding:clamp(1rem,4vw,2rem);margin:2rem 0}.budget-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:1rem}.budget-values div{background:#DEF3F0;padding:1rem;border-radius:12px;display:grid;gap:.3rem}.budget-values div:nth-child(even){background:#DFFAFF}.budget-values strong{color:#005157;font-size:1.4rem}#budget progress{width:100%;accent-color:#005157}#budget [role=status]{background:#FFF0CF;color:#492200;padding:.75rem;border-radius:8px}
+
+/* Tableau de bord financier — hiérarchie visuelle ECE */
+#budget .budget-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+#budget .budget-values div{background:none;padding:0;border-radius:0;display:block}
+#budget .budget-overview{grid-column:1/-1;background:#005157;color:white;border-radius:18px;padding:1.2rem;display:grid;grid-template-columns:minmax(100px,150px) minmax(0,1fr);align-items:center;gap:1rem}
+#budget .budget-ring{position:relative;aspect-ratio:1}
+#budget .budget-ring svg{display:block;width:100%;height:100%}
+#budget .budget-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+#budget .budget-ring-center strong{color:white;font-size:clamp(1rem,4vw,1.6rem)}
+#budget .budget-ring-center small{color:#DFFAFF}
+#budget .budget-balance{display:grid;gap:.3rem;overflow-wrap:anywhere}
+#budget .budget-balance strong{color:white;font-size:clamp(1.5rem,5vw,2.7rem);line-height:1.15}
+#budget .budget-balance small{color:#DFFAFF}
+#budget .budget-breakdown,#budget .budget-quota,#budget .budget-tokens{grid-column:1/-1;background:#F9F9F4;border:1px solid #C1E7E3;border-radius:14px;padding:1rem}
+#budget h3{margin:0 0 .7rem;color:#005157;font-size:1.05rem}
+#budget .budget-line{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:.6rem;padding:.45rem 0}
+#budget .budget-line strong{font-size:1rem;white-space:nowrap}
+#budget .budget-dot{width:10px;height:10px;border-radius:50%;background:#C1E7E3}
+#budget .budget-dot.measured{background:#005157}#budget .budget-dot.held{background:#FFA64D}
+#budget .budget-quota strong{font-size:1.5rem}
+#budget .budget-quota small{display:block}
+#budget .budget-tokens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;background:#DFFAFF}
+#budget .budget-token span{display:block;font-size:.85rem}
+#budget .budget-token strong{font-size:1.6rem}
+#budget progress{display:block;height:14px;border:0;border-radius:10px;overflow:hidden;background:#DEF3F0}
+#budget progress::-webkit-progress-bar{background:#DEF3F0;border-radius:10px}
+#budget progress::-webkit-progress-value{background:#005157;border-radius:10px}
+#budget progress::-moz-progress-bar{background:#005157;border-radius:10px}
+#budget .budget-progress-detail{font-weight:bold;color:#005157;margin:.3rem 0 .7rem}
+#budget .budget-scale{position:relative;height:1.8rem;font-size:.75rem;color:#005157;margin-top:.3rem}
+#budget .budget-scale span{position:absolute;transform:translateX(-50%);left:50%}
+#budget .budget-scale span:first-child{left:0;transform:none}
+#budget .budget-scale span:nth-child(3){left:80%}
+#budget .budget-scale span:last-child{left:100%;transform:translateX(-100%)}
+#budget [hidden]{display:none!important}
+#budget button{width:100%;background:#005157;color:white}
+@media(max-width:380px){#budget .budget-overview{grid-template-columns:1fr;text-align:center}#budget .budget-ring{max-width:130px;margin:auto}#budget .budget-line{font-size:.85rem}#budget .budget-line strong{font-size:.85rem}}
