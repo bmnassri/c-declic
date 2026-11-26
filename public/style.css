@@ -73,3 +73,12 @@ input[type=password]{width:100%;font:inherit;padding:.75rem;border:1px solid #66
  #budget .budget-line{font-size:.9rem}
  #budget .budget-line strong{font-size:.9rem}
 }
+
+#budget .budget-values .budget-total{display:flex;align-items:center;justify-content:space-between;gap:.75rem;border-top:1px solid #C1E7E3;margin-top:.5rem;padding-top:.8rem;font-weight:bold}
+#budget .budget-total strong{white-space:nowrap;font-size:1.15rem}
+#budget [role=status]{display:flex;flex-direction:column;gap:.35rem;border-left:4px solid #005157;background:#DEF3F0;color:#005157}
+#budget [role=status][data-level=warning]{background:#FFF0CF;color:#492200;border-color:#FFA64D}
+#budget [role=status][data-level=alert]{background:#FFA64D;color:#280E00;border-color:#492200}
+#budget [role=status][data-level=blocked],#budget [role=status][data-level=unknown]{background:#FEE2E2;color:#991B1B;border-color:#991B1B}
+#budget .budget-status-detail,#budget .budget-note{font-size:.85rem;line-height:1.5}
+#budget .budget-note{margin:.8rem 0 0;color:#005157}
