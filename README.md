@@ -1,4 +1,4 @@
-# C'Déclic | ECE — 1.0.0-rc.1
+# C'Déclic | ECE — 1.0.0
 
 **De l'erreur à la compréhension.** Assistant pédagogique de programmation C, en français. L'IA te guide, la solution vient de toi.
 
@@ -19,7 +19,17 @@ Finalité : accompagnement pédagogique. Les saisies et échanges sont conservé
 10 EUR mensuels estimés pour l'API, hors Railway, quota 20 tentatives, mois UTC. Tarifs prudents configurés, réservation atomique avant génération, réservation conservée en cas d'incertitude. Les anciennes tentatives sans mesure sont estimées par réservation. Ce dispositif ne garantit pas la facture fournisseur : vérifier tarifs, change, taxes et plafond Anthropic. Ne pas modifier les tarifs en cours de mois sans rapprochement comptable.
 
 ## Tests et maintenance
-GitHub Actions : npm test et npm audit. Tests HTTP locaux sans clé ni base de production. Vérifier les résultats avant validation. Les tests PostgreSQL réels isolés et Claude simulé de bout en bout restent à compléter. Vérifier manuellement les deux rôles, la validation humaine, les trois niveaux, le signalement, la persistance et le budget. Ne jamais copier de secrets ou de saisies dans les tickets. En cas d'incident désactiver AI_PILOT_ENABLED et SUPERVISION_PILOT_ENABLED, révoquer les clés compromises, prévenir le référent institutionnel et examiner les journaux sans données sensibles.
+GitHub Actions : npm test et npm audit. Tests HTTP locaux sans clé ni base de production. Vérifier les résultats avant validation. Les tests PostgreSQL isolés et Claude simulé de bout en bout sont intégrés ; leurs résultats verts ont été confirmés par le porteur du projet. Vérifier manuellement les deux rôles, la validation humaine, les trois niveaux, le signalement, la persistance et le budget. Ne jamais copier de secrets ou de saisies dans les tickets. En cas d'incident désactiver AI_PILOT_ENABLED et SUPERVISION_PILOT_ENABLED, révoquer les clés compromises, prévenir le référent institutionnel et examiner les journaux sans données sensibles.
 
-## Conditions avant V1.0.0
-Audit des dépendances et de l'historique Git, tests isolés, vérification Railway/Anthropic, validation DPO et autorisation ECE, contrôle de la charte et des droits d'utilisation. La version candidate ne constitue pas une homologation.
+## Conditions avant ouverture sur données réelles
+Audit des dépendances et de l'historique Git, tests isolés, vérification Railway/Anthropic, validation DPO et autorisation ECE, contrôle de la charte et des droits d'utilisation. La version stable du pilote fictif ne constitue pas une homologation. Vérifier les workflows sur le commit final avant publication.
+
+## Documentation finale
+- [Rapport d’audit](docs/AUDIT.md)
+- [Registre des risques](docs/RISQUES.md)
+- [Notice de confidentialité](docs/CONFIDENTIALITE.md)
+- [Guide étudiant](docs/GUIDE-ETUDIANT.md)
+- [Guide enseignant](docs/GUIDE-ENSEIGNANT.md)
+- [Maintenance](docs/MAINTENANCE.md)
+- [Historique des versions](CHANGELOG.md)
+- [Notes de publication](docs/RELEASE.md)
