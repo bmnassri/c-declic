@@ -22,10 +22,20 @@ function cookie(res,t,maxAge) { res.cookie('cd_session',t,{httpOnly:true,secure,
 setInterval(()=>{const now=Date.now(); for(const [k,v] of sessions) if(v.expires<=now) sessions.delete(k); for(const [k,v] of attempts) if(v.until<=now) attempts.delete(k);},60000).unref();
 // Railway termine TLS au proxy. La limitation globale reste active même si une IP est falsifiée.
 if (process.env.RAILWAY_ENVIRONMENT) app.set('trust proxy',1);
-function sameOrigin(req,res,next) {
-  const origin=req.get('origin');
-  const expected=(secure?'https':'http')+'://'+req.get('host');
-  if ((origin && origin!==expected) || req.get('sec-fetch-site')==='cross-site') return res.status(403).json({message:'Origine refusée.'});
+
+function sameOrigin(req, res, next) {
+  const origin = req.get('origin');
+  const expected = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? 'https://' + process.env.RAILWAY_PUBLIC_DOMAIN
+    : (secure ? 'https' : 'http') + '://' + req.get('host');
+  if (
+    origin !== expected ||
+    req.get('sec-fetch-site') === 'cross-site'
+  ) {
+    return res.status(403).json({
+      message: 'Origine refusée.'
+    });
+  }
   next();
 }
 function requireRole(role) { return (req,res,next)=>{const s=session(req); if(!s) return req.path.startsWith('/api/')?res.status(401).json({message:'Session expirée. Reconnecte-toi.'}):res.redirect('/connexion'); if(s.role!==role) return res.status(403).send('Accès interdit.'); next();}; }
