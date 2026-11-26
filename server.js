@@ -17,7 +17,7 @@ const digest = value => crypto.createHmac('sha256', secret).update(value).digest
 const equal = (a,b) => crypto.timingSafeEqual(Buffer.from(digest(a)), Buffer.from(digest(b)));
 function token(req) { return /(?:^|;\s*)cd_session=([a-f0-9]{64})(?:;|$)/.exec(req.headers.cookie || '')?.[1]; }
 function session(req) { const t = token(req); const s = t && sessions.get(digest(t)); return s && s.expires > Date.now() ? s : null; }
-function revoke(req) { const t = token(req); if(t) sessions.delete(digest(t)); }
+function revoke(req) { const t = token(req); if(t) { const s=sessions.get(digest(t)); if(s) s.revoked=true; sessions.delete(digest(t)); } }
 function cookie(res,t,maxAge) { res.cookie('cd_session',t,{httpOnly:true,secure,sameSite:'strict',path:'/',maxAge}); }
 setInterval(()=>{const now=Date.now(); for(const [k,v] of sessions) if(v.expires<=now) sessions.delete(k); for(const [k,v] of attempts) if(v.until<=now) attempts.delete(k);},60000).unref();
 // Railway termine TLS au proxy. La limitation globale reste active même si une IP est falsifiée.
@@ -83,5 +83,6 @@ app.post('/api/analyser',sameOrigin,requireRole('student'),(req,res)=>{
   res.json({message:'Saisie validée par le serveur. Aucune analyse IA effectuée à cette étape.'});
 });
 require('./ai-pilot')(app, sameOrigin, requireRole, notions);
+require('./supervision')(app, sameOrigin, requireRole, notions, session);
 app.use((err,req,res,next)=>res.status(err.status===413?413:400).json({message:'Requête invalide ou trop volumineuse.'}));
 app.listen(process.env.PORT||3000,'0.0.0.0');
