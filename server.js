@@ -49,6 +49,7 @@ function requireRole(role) { return (req,res,next)=>{const s=session(req); if(!s
 
 const notions = ['Variables','Conditions','Boucles','Fonctions','Tableaux','Chaînes de caractères','Pointeurs','Structures','Allocation dynamique','Fichiers'];
 app.disable('x-powered-by');
+app.use((req,res,next)=>{res.set('Cache-Control','no-store');res.set('X-Frame-Options','DENY');res.set('Permissions-Policy','camera=(), microphone=(), geolocation=()');if(secure)res.set('Strict-Transport-Security','max-age=31536000');next();});
 app.use((req,res,next)=>{res.set('X-Content-Type-Options','nosniff');res.set('Referrer-Policy','same-origin');res.set('Content-Security-Policy',"default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");next();});
 app.use(express.json({limit:'100kb'}));
 app.use((req,res,next)=>{res.set('Cache-Control','no-store');next();});
@@ -85,4 +86,5 @@ app.post('/api/analyser',sameOrigin,requireRole('student'),(req,res)=>{
 require('./ai-pilot')(app, sameOrigin, requireRole, notions);
 require('./supervision')(app, sameOrigin, requireRole, notions, session);
 app.use((err,req,res,next)=>res.status(err.status===413?413:400).json({message:'Requête invalide ou trop volumineuse.'}));
-app.listen(process.env.PORT||3000,'0.0.0.0');
+if(require.main===module) app.listen(process.env.PORT||3000,'0.0.0.0');
+module.exports=app;
