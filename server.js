@@ -42,7 +42,7 @@ function requireRole(role) { return (req,res,next)=>{const s=session(req); if(!s
 
 const notions = ['Variables','Conditions','Boucles','Fonctions','Tableaux','Chaînes de caractères','Pointeurs','Structures','Allocation dynamique','Fichiers'];
 app.disable('x-powered-by');
-app.use((req,res,next)=>{res.set('X-Content-Type-Options','nosniff');res.set('Referrer-Policy','no-referrer');res.set('Content-Security-Policy',"default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");next();});
+app.use((req,res,next)=>{res.set('X-Content-Type-Options','nosniff');res.set('Referrer-Policy','same-origin');res.set('Content-Security-Policy',"default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");next();});
 app.use(express.json({limit:'100kb'}));
 app.use((req,res,next)=>{res.set('Cache-Control','no-store');next();});
 app.use(express.urlencoded({extended:false,limit:'4kb'}));
