@@ -1,3 +1,4 @@
+(()=>{
 'use strict';
 const root=document.querySelector('#supervision');
 const teacher=root.dataset.role==='teacher';
@@ -45,3 +46,5 @@ if(!teacher){
  send.addEventListener('click',()=>run(async()=>{if(!form.reportValidity()||!check.checked)throw Error('Complète le formulaire et confirme les données fictives.');const b=Object.fromEntries(new FormData(form));b.fictif=true;const d=await api('demandes',b);status.textContent=d.message;await load();}));
 }
 run(load);
+
+})();
