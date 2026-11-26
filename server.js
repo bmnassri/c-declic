@@ -32,6 +32,13 @@ function sameOrigin(req, res, next) {
     origin !== expected ||
     req.get('sec-fetch-site') === 'cross-site'
   ) {
+    console.warn('[ORIGIN_CHECK]', JSON.stringify({
+      originState: !origin ? 'absent' : origin === 'null' ? 'null' : origin === expected ? 'match' : 'mismatch',
+      publicDomainConfigured: Boolean(process.env.RAILWAY_PUBLIC_DOMAIN),
+      expectedMatchesPublicURL: expected === 'https://c-declic-production.up.railway.app',
+      originMatchesPublicURL: origin === 'https://c-declic-production.up.railway.app',
+      fetchSite: ['same-origin', 'same-site', 'cross-site', 'none'].includes(req.get('sec-fetch-site')) ? req.get('sec-fetch-site') : 'absent-or-other'
+    }));
     return res.status(403).json({
       message: 'Origine refusée.'
     });
