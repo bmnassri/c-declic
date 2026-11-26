@@ -82,5 +82,6 @@ app.post('/api/analyser',sameOrigin,requireRole('student'),(req,res)=>{
   if(!notions.includes(b.notion)) return res.status(400).json({message:'Notion inconnue.'});
   res.json({message:'Saisie validée par le serveur. Aucune analyse IA effectuée à cette étape.'});
 });
+require('./ai-pilot')(app, sameOrigin, requireRole, notions);
 app.use((err,req,res,next)=>res.status(err.status===413?413:400).json({message:'Requête invalide ou trop volumineuse.'}));
 app.listen(process.env.PORT||3000,'0.0.0.0');
