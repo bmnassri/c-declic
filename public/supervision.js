@@ -15,18 +15,39 @@ async function api(url,body){
 let busy=false;
 async function run(fn){if(busy)return;busy=true;root.querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;root.querySelectorAll('button').forEach(b=>b.disabled=false);}}
 function button(parent,label,fn){const b=node('button',label);b.type='button';b.addEventListener('click',()=>run(fn));parent.append(b);}
-const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée'};
+const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 async function load(){
  const d=await api(teacher?'enseignant':'mes-demandes');list.replaceChildren();
  if(!d.requests.length)list.append(node('p','Aucune demande.'));
  for(const r of d.requests){
   const card=node('article','','supervision-card');list.append(card);
   card.append(node('h3',labels[r.state]||r.state),node('small','Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));
+  if(r.reported)card.append(node('p','Erreur signalée à l’enseignant.','supervision-diagnostic'));
+  if(r.history?.length){
+   for(const turn of r.history){
+    card.append(node('h4','Question socratique — niveau '+turn.level),node('p',turn.question,'dialogue-question'));
+    const details=document.createElement('details');details.append(node('summary','Afficher l’indice — niveau '+turn.level),node('p',turn.indice));card.append(details);
+    if(turn.student)card.append(node('p',turn.student.action==='reply'?'Étudiant : '+turn.student.text:'Étudiant : demande d’un indice suivant','dialogue-reply'));
+   }
+  }
   if(!teacher){
-   if(r.state==='approved'){card.append(node('h4','Question socratique'),node('p',r.question));const details=document.createElement('details');details.append(node('summary','Je suis bloqué : afficher l’indice'),node('p',r.indice));card.append(details);}
+   const act=async(action,extra={})=>{const d=await api(r.id+'/dialogue',{action,...extra});status.textContent=d.message;await load();};
+   if(r.state==='approved'){
+    if(!r.history?.length){card.append(node('h4','Question socratique'),node('p',r.question));const details=document.createElement('details');details.append(node('summary','Je suis bloqué : afficher l’indice'),node('p',r.indice));card.append(details);}
+    if((r.history?.length||0)<3){
+     const label=node('label','Ton raisonnement (sans données personnelles)');const t=document.createElement('textarea');t.maxLength=1000;t.rows=3;label.append(t);card.append(label);
+     const l=node('label','');const check=document.createElement('input');check.type='checkbox';l.append(check,document.createTextNode(' Je confirme que ma réponse ne contient pas de données personnelles.'));card.append(l);
+     button(card,'Répondre',()=>act('reply',{text:t.value,fictif:check.checked}));
+     button(card,'Indice suivant',()=>act('hint'));
+    }else card.append(node('p','Trois niveaux atteints. Demande une aide directe à ton enseignant si nécessaire.'));
+    button(card,'J’ai compris',()=>act('understood'));
+   }
+   if(r.history?.length&&!r.reported)button(card,'Signaler une erreur',()=>act('report'));
+   if(r.state!=='analyzing')button(card,'Nouvelle analyse',async()=>{if(!window.confirm('Effacer ce dialogue et recommencer ?'))return;await act('new');document.querySelector('#analyse').reset();document.querySelector('#etudiant').scrollIntoView();});
    if(r.state==='rejected')card.append(node('p','Demande refusée. Contacte ton enseignant.'));
    continue;
   }
+  if(r.followup)card.append(node('p','Nouvel échange — niveau '+r.level));
   if(r.input)for(const [k,label] of Object.entries({notion:'Notion',enonce:'Énoncé',code:'Code C',erreur:'Erreur',question:'Question étudiante'})){card.append(node('h4',label),node('pre',r.input[k]));}
   if(r.state==='pending')button(card,'Analyser avec Claude',async()=>{const d=await api(r.id+'/analyser',{});status.textContent='Brouillon généré. Tentatives restantes : '+d.remaining;await load();});
   if(r.state==='draft'){
