@@ -13,7 +13,7 @@ async function api(url,body){
  const d=await r.json();if(!r.ok)throw Error(d.message||'Action refusée.');return d;
 }
 let busy=false;
-async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>b.disabled=true);try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>b.disabled=false);}}
+async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true');});try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy');});}}
 function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude'].includes(label))b.classList.add('primary');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 async function load(){
