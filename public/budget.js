@@ -32,6 +32,6 @@ function render(d){
  status.replaceChildren(el('strong','budget-status-title',heading),el('span','budget-status-detail',reason+next+(d.legacy?' '+d.legacy+' anciennes tentatives sans mesure exacte.':'')));
 
 }
-async function load(){refresh.disabled=true;try{const r=await fetch('/api/enseignant/budget');if(!r.ok)throw Error('Budget indisponible.');render(await r.json());}catch(e){status.textContent=e.message;values.replaceChildren();status.dataset.level='unknown';}finally{refresh.disabled=false;}}
+async function load(){refresh.disabled=true;refresh.setAttribute('aria-busy','true');try{const r=await fetch('/api/enseignant/budget');if(!r.ok)throw Error('Budget indisponible.');render(await r.json());}catch(e){status.textContent=e.message;values.replaceChildren();status.dataset.level='unknown';}finally{refresh.disabled=false;refresh.removeAttribute('aria-busy');}}
 refresh.addEventListener('click',load);load();
 })();
