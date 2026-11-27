@@ -41,3 +41,6 @@ Après clôture, l’enseignant peut confirmer la compréhension déclarée, dem
 ### Quota configurable — V1.3.1
 
 Dans Railway, définir `AI_MONTHLY_ATTEMPT_LIMIT=40` (entier de 1 à 1000, défaut 40 si absent). Une valeur invalide bloque les appels IA. Le plafond de 10 EUR et les compteurs PostgreSQL existants restent inchangés. La limite et le plafond financier s’appliquent simultanément ; modifier le quota ne réinitialise pas le mois UTC. Un redéploiement efface les dialogues temporaires, pas la consommation persistante.
+
+### Interface V1.3.2
+Après transmission, le retour enseignant est affiché en lecture seule avec confirmation et bouton de modification. L’espace étudiant actualise uniquement les retours des demandes terminées toutes les 10 secondes lorsque la page est visible, sans appel IA ni remplacement des formulaires en cours. L’actualisation manuelle reste disponible.
