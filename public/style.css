@@ -82,3 +82,48 @@ input[type=password]{width:100%;font:inherit;padding:.75rem;border:1px solid #66
 #budget [role=status][data-level=blocked],#budget [role=status][data-level=unknown]{background:#FEE2E2;color:#991B1B;border-color:#991B1B}
 #budget .budget-status-detail,#budget .budget-note{font-size:.85rem;line-height:1.5}
 #budget .budget-note{margin:.8rem 0 0;color:#005157}
+
+
+/* V1.1 — design system, scoped to authenticated workspaces */
+.workspace{--surface:#fff;--line:#C1E7E3;--shadow:0 12px 32px rgba(0,33,36,.07);background:#F9F9F4}
+.workspace header{align-items:center;padding:1rem clamp(1rem,4vw,3rem);gap:1rem}
+.workspace header strong{display:flex;align-items:center;gap:.7rem}
+.workspace header strong::before{content:"C";display:grid;place-items:center;width:2.2rem;height:2.2rem;border-radius:10px;background:var(--blue);color:var(--ink);font-weight:900}
+.workspace header form{margin:0}.workspace header button{padding:.45rem .9rem}
+.workspace main{max-width:1440px;padding:clamp(1rem,3vw,2.5rem);display:grid;gap:1.5rem}
+.workspace main>section{min-width:0;margin:0}
+.workspace h2{font-size:clamp(1.35rem,2vw,1.8rem);margin:0 0 .8rem}
+.workspace .hero{background:linear-gradient(115deg,#002124,#005157);color:#fff;border:0;border-radius:24px;box-shadow:var(--shadow);padding:clamp(1.5rem,4vw,3rem)}
+.workspace .hero h1{color:#fff;font-size:clamp(2rem,4vw,3.4rem);max-width:20ch}
+.workspace .hero .eyebrow{color:var(--blue)}
+.workspace .hero p{max-width:65ch}
+.workspace .hero .primary{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.student-workspace .hero{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);align-items:center;gap:2rem}
+.hero-art{display:grid;place-items:center;min-height:180px;border:1px solid #78CCFF66;border-radius:20px;background:radial-gradient(circle,#005157 0%,#002124 80%);color:var(--blue);font:bold clamp(3rem,8vw,7rem)/1 monospace;letter-spacing:-.12em}
+.journey{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.journey article{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1rem;box-shadow:var(--shadow)}
+.journey b{display:block;color:var(--primary);font-size:1.1rem}.journey small{display:block}
+.journey .step{display:inline-grid;place-items:center;background:#DEF3F0;color:var(--primary);border-radius:10px;width:2rem;height:2rem;margin-bottom:.6rem;font-weight:bold}
+.workspace #etudiant,.workspace #supervision,.workspace #budget{padding:clamp(1rem,2.5vw,2rem);box-shadow:var(--shadow);border-radius:20px}
+.student-workspace #analyse{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:0 1.5rem;align-items:start}
+.student-workspace #analyse .form-context,.student-workspace #analyse .form-code{min-width:0}
+.student-workspace #analyse .actions,.student-workspace #status{grid-column:1/-1}
+.workspace textarea,.workspace select{background:#FDFDFB;border-color:#78989a}
+.workspace #code{background:#002124;color:#DFFAFF;min-height:250px;font: .95rem/1.7 'JetBrains Mono',Consolas,monospace}
+.workspace button,.workspace .primary{transition:background .15s,box-shadow .15s}
+.workspace button:not(:disabled):hover,.workspace .primary:hover{box-shadow:0 3px 12px #00515730}
+.workspace #supervision .supervision-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--primary);padding:1.25rem}
+.workspace #supervision pre{background:#002124;color:#DFFAFF}
+.workspace #supervision .dialogue-question{border-left:4px solid #005157}
+.teacher-workspace main{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:start}
+.teacher-workspace main>.hero,.teacher-workspace main>.workspace-nav,.teacher-workspace main>#etudiant{grid-column:1/-1}
+.teacher-workspace main>#supervision{grid-column:1;grid-row:3}
+.teacher-workspace main>#budget{grid-column:2;grid-row:3}
+.workspace-nav{display:flex;flex-wrap:wrap;gap:.65rem}
+.workspace-nav a{background:#fff;border:1px solid var(--line);color:var(--primary);font-weight:bold;text-decoration:none;padding:.6rem 1rem;border-radius:10px}
+.workspace-nav a:hover{background:#DEF3F0}
+.workspace #resultat-ia{background:transparent;color:var(--ink);box-shadow:none;padding:0}
+.workspace footer{border-top:1px solid var(--line)}
+@media(max-width:850px){.teacher-workspace main{grid-template-columns:1fr}.teacher-workspace main>#supervision,.teacher-workspace main>#budget{grid-column:1;grid-row:auto}.student-workspace #analyse{grid-template-columns:1fr}.student-workspace .hero{grid-template-columns:1fr}.hero-art{min-height:110px}.journey{gap:.5rem}.journey article{padding:.7rem}}
+@media(max-width:480px){.journey{grid-template-columns:1fr}.workspace header span{display:none}.workspace header strong{font-size:1.1rem}.workspace main{padding:.75rem}.workspace #budget .budget-line{grid-template-columns:8px minmax(0,1fr) auto;gap:.3rem}}
+@media(prefers-reduced-motion:reduce){.workspace *{transition:none!important}}
