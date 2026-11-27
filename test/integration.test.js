@@ -70,6 +70,19 @@ run('Dialogue complet: trois validations, confidentialité et signalement',async
  await status(prefix+'/dialogue',student,{action:'report'},200);
  assert.equal((await status('/api/supervision/enseignant',teacher,undefined,200)).requests.find(r=>r.id===id).reported,true);
  await status(prefix+'/dialogue',student,{action:'understood'},400);await status(prefix+'/dialogue',student,{action:'understood',reflection:'Test fictif',confidence:'help',fictif:true},400);await status(prefix+'/dialogue',student,{action:'understood',reflection:'Les indices commencent à zéro.',confidence:'autonomous',fictif:true},200);assert.equal((await view()).state,'completed');assert.equal((await view()).closure.confidence,'autonomous');
+ const feedbackCalls=calls.length;
+ await status(prefix+'/feedback',teacher,{verdict:'clarify',comment:'',confirm:true},400);
+ await status(prefix+'/feedback',teacher,{verdict:'confirmed',comment:'',confirm:false},400);
+ await status(prefix+'/feedback',teacher,{verdict:'invalid',comment:'Test',confirm:true},400);
+ await status(prefix+'/feedback',teacher,{verdict:'confirmed',comment:'x'.repeat(1001),confirm:true},400);
+ const forbidden=await req(prefix+'/feedback',student,{verdict:'confirmed',comment:'',confirm:true});assert.equal(forbidden.status,403);
+ await status(prefix+'/feedback',teacher,{verdict:'clarify',comment:'Précise le caractère final.',confirm:true},200);
+ assert.equal((await view()).feedback.verdict,'clarify');
+ assert.equal((await view()).feedback.comment,'Précise le caractère final.');
+ assert.equal((await status('/api/supervision/mes-demandes',other,undefined,200)).requests.length,0);
+ await status(prefix+'/feedback',teacher,{verdict:'confirmed',comment:'',confirm:true},200);
+ assert.equal((await view()).feedback.verdict,'confirmed');assert.equal(calls.length,feedbackCalls);
+
  await status(prefix+'/dialogue',student,{action:'new'},200);assert.equal(await view(),undefined);
 });
 run('Claude simulé: erreurs, format et taille',async()=>{
