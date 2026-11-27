@@ -33,3 +33,7 @@ Audit des dépendances et de l'historique Git, tests isolés, vérification Rail
 - [Maintenance](docs/MAINTENANCE.md)
 - [Historique des versions](CHANGELOG.md)
 - [Notes de publication](docs/RELEASE.md)
+
+## Interface V1.3 — retour pédagogique
+
+Après clôture, l’enseignant peut confirmer la compréhension déclarée, demander une consolidation ou conseiller une aide complémentaire. Le commentaire est limité à 1000 caractères, sans données personnelles, et visible uniquement par la session étudiante concernée et les enseignants autorisés. Ce retour facultatif ne constitue pas une note, ne déclenche aucun appel Claude et reste en mémoire avec la demande (expiration initiale inchangée, une heure maximum, déconnexion ou redémarrage). Une nouvelle analyse efface le dialogue précédent, y compris le retour. Le statut terminé ne signifie pas que la compréhension est confirmée. L’étudiant actualise ses demandes pour lire le retour.
