@@ -13,14 +13,14 @@ async function api(url,body){
  const d=await r.json();if(!r.ok)throw Error(d.message||'Action refusée.');return d;
 }
 let busy=false;
-async function run(fn){if(busy)return;busy=true;document.querySelectorAll('#supervision button,#submission-actions button').forEach(b=>b.disabled=true);try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;root.querySelectorAll('button').forEach(b=>b.disabled=false);}}
-function button(parent,label,fn){const b=node('button',label);b.type='button';b.addEventListener('click',()=>run(fn));parent.append(b);}
+async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>b.disabled=true);try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>b.disabled=false);}}
+function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude'].includes(label))b.classList.add('primary');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 async function load(){
  const d=await api(teacher?'enseignant':'mes-demandes');list.replaceChildren();
  if(teacher){for(const [id,count] of [['metric-pending',d.requests.filter(r=>['pending','analyzing','draft'].includes(r.state)).length],['metric-approved',d.requests.filter(r=>['approved','completed'].includes(r.state)).length],['metric-reported',d.requests.filter(r=>r.reported).length]]){const el=document.getElementById(id);if(el)el.textContent=String(count);}} if(!d.requests.length)list.append(node('p','Aucune demande pour le moment.','empty-state'));
  for(const r of d.requests){
-  const card=node('article','','supervision-card');list.append(card);
+  const card=node('article','','supervision-card');card.dataset.state=r.state;list.append(card);
   card.append(node('h3',labels[r.state]||r.state),node('small','Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));
   if(r.reported)card.append(node('p','Erreur signalée à l’enseignant.','supervision-diagnostic'));
   if(r.history?.length){
@@ -33,7 +33,7 @@ async function load(){
   if(!teacher){
    const act=async(action,extra={})=>{const d=await api(r.id+'/dialogue',{action,...extra});status.textContent=d.message;await load();};
    if(r.state==='approved'){
-    if(!r.history?.length){card.append(node('h4','Question socratique'),node('p',r.question));const details=document.createElement('details');details.append(node('summary','Je suis bloqué : afficher l’indice'),node('p',r.indice));card.append(details);}
+    if(!r.history?.length){card.append(node('h4','Question socratique'),node('p',r.question,'dialogue-question'));const details=document.createElement('details');details.append(node('summary','Je suis bloqué : afficher l’indice'),node('p',r.indice));card.append(details);}
     if((r.history?.length||0)<3){
      const label=node('label','Ton raisonnement (sans données personnelles)');const t=document.createElement('textarea');t.maxLength=1000;t.rows=3;label.append(t);card.append(label);
      const l=node('label','');const check=document.createElement('input');check.type='checkbox';l.append(check,document.createTextNode(' Je confirme que ma réponse ne contient pas de données personnelles.'));card.append(l);
