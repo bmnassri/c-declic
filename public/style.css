@@ -151,3 +151,42 @@ input[type=password]{width:100%;font:inherit;padding:.75rem;border:1px solid #66
 .empty-state{text-align:center;padding:1.5rem;color:#005157;background:#F9F9F4;border-radius:12px}
 @media(max-width:850px){.teacher-workspace main{grid-template-columns:1fr}.teacher-workspace main>.workspace-nav{grid-column:1;grid-row:auto;flex-direction:row;flex-wrap:wrap;padding:.7rem}.teacher-workspace main>.hero,.teacher-workspace main>#supervision,.teacher-workspace main>#budget,.teacher-workspace main>#etudiant,.teacher-workspace main>#overview-metrics{grid-column:1;margin:0 1rem 1rem}.teacher-workspace[data-view="overview"] #budget .budget-values{grid-template-columns:1fr}.login-workspace main{grid-template-columns:1fr;padding-top:1rem}.login-workspace .hero,.login-workspace #etudiant{border-radius:18px}.student-workspace .hero{padding:1.2rem}}
 @media(max-width:480px){#overview-metrics{gap:.4rem}.metric{padding:.5rem;font-size:.8rem}}
+
+/* Refonte 3 — presentation uniquement */
+.workspace{line-height:1.5}
+.workspace h1,.workspace h2,.workspace h3{letter-spacing:-.025em}
+.workspace label{margin:.8rem 0 .35rem}
+.workspace textarea,.workspace select{padding:.65rem .8rem}
+.workspace main{gap:1rem}
+.workspace #supervision,.workspace #budget,.workspace #etudiant{padding:clamp(1rem,2vw,1.5rem)}
+.workspace .ui-icon{width:1.25em;height:1.25em;flex:none;vertical-align:-.2em;margin-right:.45em}
+.workspace .step .ui-icon{width:1.5rem;height:1.5rem;margin:0}
+.teacher-workspace header{position:sticky;top:0;z-index:5;min-height:72px}
+.teacher-workspace main{gap:0;grid-template-columns:220px minmax(0,1fr)}
+.teacher-workspace main>.workspace-nav{position:fixed;top:72px;bottom:0;left:0;width:220px;overflow:auto;z-index:4}
+.teacher-workspace footer{margin-left:220px}
+.teacher-workspace main>.hero,.teacher-workspace main>#supervision,.teacher-workspace main>#budget,.teacher-workspace main>#etudiant,.teacher-workspace main>#overview-metrics{margin:0 clamp(1rem,3vw,2rem) 1rem}
+#analyse-ia{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1rem;align-items:start}
+#analyse-ia>.submission-actions,#analyse-ia>#status-ia{grid-column:1/-1}
+.editor-body{position:relative;min-width:0}
+.editor-body .editor-highlight{position:absolute;inset:0 0 0 3rem;margin:0;padding:.75rem;overflow:hidden;white-space:pre;pointer-events:none;font:.95rem/1.7 Consolas,monospace;tab-size:4;color:#DFFAFF}
+.workspace .editor-body.highlight-ready #code{position:relative;background:transparent;color:transparent;caret-color:white;z-index:1;tab-size:4;padding:.75rem}
+.editor-body.highlight-ready #code::selection{background:#78CCFF55;color:transparent}
+.editor-highlight .tok-key{color:#78CCFF;font-weight:normal}.editor-highlight .tok-string{color:#FFA64D}.editor-highlight .tok-comment{color:#9DBAB8}.editor-highlight .tok-number{color:#C1E7E3}.editor-highlight .tok-directive{color:#F6C5FF}
+.workspace #supervision .supervision-card{padding:1rem;margin:.75rem 0;border-radius:14px;box-shadow:0 3px 12px #0021240a}
+.workspace #supervision .supervision-card h3{margin:0 0 .2rem;font-size:1.15rem}
+.workspace #supervision .supervision-card h4{margin:1rem 0 .35rem}
+.workspace #supervision .dialogue-question{max-width:92%;margin:.4rem 0;padding:.85rem 1rem;border-radius:4px 16px 16px 16px}
+.workspace #supervision .dialogue-reply{max-width:85%;margin:.75rem 0 .75rem auto;border-radius:16px 4px 16px 16px}
+.workspace #supervision details{max-width:92%;padding:.75rem 1rem}
+.workspace #supervision pre{max-height:18rem;overflow:auto}
+#budget .budget-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+#budget .budget-overview,#budget .budget-breakdown,#budget .budget-quota,#budget .budget-tokens{grid-column:auto;padding:.85rem}
+#budget .budget-overview{grid-template-columns:90px minmax(0,1fr)}
+#budget .budget-balance strong{white-space:normal;font-size:clamp(1.2rem,2.4vw,2rem)}
+#budget .budget-tokens{align-content:center}
+#budget button{width:auto}
+.teacher-workspace[data-view="overview"] #budget [role=status]{display:flex}
+@media(max-width:1050px){.teacher-workspace header{position:static}.teacher-workspace main>.workspace-nav{position:sticky;top:0;bottom:auto;width:auto;z-index:4}.teacher-workspace main{grid-template-columns:1fr}.teacher-workspace main>.workspace-nav{grid-column:1;grid-row:auto;flex-direction:row;flex-wrap:wrap}.teacher-workspace main>.hero,.teacher-workspace main>#supervision,.teacher-workspace main>#budget,.teacher-workspace main>#etudiant,.teacher-workspace main>#overview-metrics{grid-column:1}.teacher-workspace footer{margin-left:0}}
+@media(max-width:700px){#analyse-ia{grid-template-columns:1fr}#budget .budget-values{grid-template-columns:1fr}#budget .budget-overview{grid-template-columns:90px minmax(0,1fr);text-align:left}#budget .budget-values .budget-ring{width:90px}.workspace .actions{justify-content:stretch}.workspace .actions button{flex:1}.workspace #supervision button{max-width:100%;white-space:normal}.workspace .editor-body #code{font-size:.85rem}.editor-body .editor-highlight,.editor-lines{font-size:.85rem}}
+@media(forced-colors:active){.workspace .editor-body.highlight-ready #code{color:CanvasText;background:Canvas}.editor-highlight{display:none}}
