@@ -14,7 +14,7 @@ async function api(url,body){
 }
 let busy=false;
 async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true');});try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy');});}}
-function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude'].includes(label))b.classList.add('primary');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
+function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude','Commencer un nouvel exercice','Terminer mon accompagnement'].includes(label))b.classList.add('primary');if(label==='Commencer un nouvel exercice')b.classList.add('new-exercise');if(label==='Signaler une erreur')b.classList.add('report-action');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 const stateInfo={pending:['◷','La demande attend une intervention de l’enseignant.'],analyzing:['…','L’IA prépare un accompagnement.'],draft:['▤','L’enseignant vérifie la proposition.'],approved:['✓','La réponse est validée : place au raisonnement.'],completed:['✓','Compréhension déclarée par l’étudiant.'],rejected:['×','Contacte ton enseignant.']};
 async function load(){
@@ -22,7 +22,26 @@ async function load(){
  if(teacher){for(const [id,count] of [['metric-pending',d.requests.filter(r=>['pending','analyzing','draft'].includes(r.state)).length],['metric-approved',d.requests.filter(r=>r.state==='approved').length],['metric-completed',d.requests.filter(r=>r.state==='completed').length],['metric-reported',d.requests.filter(r=>r.reported).length]]){const el=document.getElementById(id);if(el)el.textContent=String(count);}} if(!d.requests.length)list.append(node('p','Aucune demande pour le moment.','empty-state'));
  for(const r of d.requests){
   const card=node('article','','supervision-card');card.dataset.state=r.state;list.append(card);
-  const banner=node('div','','request-banner');banner.append(node('h3',(stateInfo[r.state]?.[0]||'')+' '+(r.state==='completed'?'Accompagnement terminé':labels[r.state]||r.state)),node('p',stateInfo[r.state]?.[1]||''));card.append(banner,node('small',(r.notion?r.notion+' · ':'')+'Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));if(r.state!=='rejected'){const progress=node('ol','','request-progress');const step=r.state==='completed'?3:r.state==='approved'||r.level>1?2:r.state==='pending'?0:1;['Soumission','Analyse','Réflexion','Clôture'].forEach((label,i)=>{const li=node('li',label);if(i<=step)li.className='reached';if(i===step)li.setAttribute('aria-current','step');progress.append(li);});card.append(progress);}if(r.state==='completed'){const finish=node('div','','closure-summary');finish.append(node('h3',teacher?'Synthèse de l’apprentissage':'Bravo, tu as eu le déclic !'),node('p',teacher?'Compréhension déclarée — aucune note attribuée.':'Tu as terminé ton accompagnement. L’IA te guide, la solution vient de toi.'));if(r.closure){finish.append(node('p',r.closure.confidence==='autonomous'?'Je peux expliquer et corriger mon erreur seul.':'J’ai compris l’essentiel.'),node('h4','Synthèse personnelle'),node('p',r.closure.reflection,'closure-reflection'));}finish.append(node('small',r.history.length+'/3 niveaux utilisés · '+r.history.length+' réponses validées · '+(r.reported?'Erreur signalée':'Aucun signalement')));card.append(finish);}
+  const banner=node('div','','request-banner');
+  const mark=node('span',stateInfo[r.state]?.[0]||'','request-mark');mark.setAttribute('aria-hidden','true');
+  const heading=node('div','','request-heading');
+  const celebration=r.state==='completed'&&!teacher;
+  if(celebration)banner.classList.add('celebration');
+  heading.append(node('h3',celebration?'Bravo, tu as eu le déclic !':r.state==='completed'?'Accompagnement terminé':labels[r.state]||r.state),node('p',celebration?'Accompagnement terminé':stateInfo[r.state]?.[1]||''));
+  if(celebration)heading.append(node('p','L’IA te guide, la solution vient de toi.','celebration-motto'));
+  banner.append(mark,heading);card.append(banner,node('small',(r.notion?r.notion+' · ':'')+'Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));
+  if(r.state!=='rejected'){
+   const progress=node('ol','','request-progress');progress.setAttribute('aria-label','Progression pédagogique');
+   const step=r.state==='completed'?3:r.state==='approved'||r.level>1?2:r.state==='pending'?0:1;
+   ['Soumission','Analyse','Réflexion','Clôture'].forEach((label,i)=>{const li=node('li','');const done=r.state==='completed'||i<step;const dot=node('span',done?'✓':String(i+1),'progress-dot');dot.setAttribute('aria-hidden','true');li.append(dot,node('span',label));if(done)li.className='reached';if(i===step&&r.state!=='completed')li.setAttribute('aria-current','step');progress.append(li);});card.append(progress);
+  }
+  if(r.state==='completed'){
+   const finish=node('div','','closure-summary');
+   const stats=node('div','','closure-stats');for(const [value,label,symbol] of [[r.history.length+'/3','Niveaux utilisés','▤'],[String(r.history.length),'Réponses validées','✓'],[r.reported?'1':'0','Signalement','⚑']]){const tile=node('div','','closure-stat');const icon=node('span',symbol,'closure-stat-icon');icon.setAttribute('aria-hidden','true');tile.append(icon,node('strong',value),node('small',label));stats.append(tile);}finish.append(stats);
+   if(r.closure){const assessment=node('div','','closure-assessment');const icon=node('span','◇','assessment-icon');icon.setAttribute('aria-hidden','true');const copy=node('div','');copy.append(node('small',teacher?'Autoévaluation de l’étudiant':'Mon autoévaluation'),node('strong',r.closure.confidence==='autonomous'?'Je peux expliquer et corriger mon erreur seul.':'J’ai compris l’essentiel.'));assessment.append(icon,copy);finish.append(assessment,node('h4',teacher?'Synthèse de l’apprentissage':'Ma synthèse personnelle'),node('p',r.closure.reflection,'closure-reflection'));}
+   if(teacher)finish.append(node('small','Compréhension déclarée — aucune note attribuée.'));
+   card.append(finish);
+  }
   if(r.reported)card.append(node('p','Erreur signalée à l’enseignant.','supervision-diagnostic'));
   if(r.history?.length){
    const historyContainer=r.state==='completed'?document.createElement('details'):node('div','');if(r.state==='completed')historyContainer.append(node('summary','Consulter le parcours pédagogique'));card.append(historyContainer);
