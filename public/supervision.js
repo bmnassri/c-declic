@@ -16,18 +16,20 @@ let busy=false;
 async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true');});try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy');});}}
 function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude'].includes(label))b.classList.add('primary');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
+const stateInfo={pending:['◷','La demande attend une intervention de l’enseignant.'],analyzing:['…','L’IA prépare un accompagnement.'],draft:['▤','L’enseignant vérifie la proposition.'],approved:['✓','La réponse est validée : place au raisonnement.'],completed:['✓','Compréhension déclarée par l’étudiant.'],rejected:['×','Contacte ton enseignant.']};
 async function load(){
  const d=await api(teacher?'enseignant':'mes-demandes');list.replaceChildren();
- if(teacher){for(const [id,count] of [['metric-pending',d.requests.filter(r=>['pending','analyzing','draft'].includes(r.state)).length],['metric-approved',d.requests.filter(r=>['approved','completed'].includes(r.state)).length],['metric-reported',d.requests.filter(r=>r.reported).length]]){const el=document.getElementById(id);if(el)el.textContent=String(count);}} if(!d.requests.length)list.append(node('p','Aucune demande pour le moment.','empty-state'));
+ if(teacher){for(const [id,count] of [['metric-pending',d.requests.filter(r=>['pending','analyzing','draft'].includes(r.state)).length],['metric-approved',d.requests.filter(r=>r.state==='approved').length],['metric-completed',d.requests.filter(r=>r.state==='completed').length],['metric-reported',d.requests.filter(r=>r.reported).length]]){const el=document.getElementById(id);if(el)el.textContent=String(count);}} if(!d.requests.length)list.append(node('p','Aucune demande pour le moment.','empty-state'));
  for(const r of d.requests){
   const card=node('article','','supervision-card');card.dataset.state=r.state;list.append(card);
-  card.append(node('h3',labels[r.state]||r.state),node('small','Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));
+  const banner=node('div','','request-banner');banner.append(node('h3',(stateInfo[r.state]?.[0]||'')+' '+(r.state==='completed'?'Accompagnement terminé':labels[r.state]||r.state)),node('p',stateInfo[r.state]?.[1]||''));card.append(banner,node('small',(r.notion?r.notion+' · ':'')+'Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));if(r.state!=='rejected'){const progress=node('ol','','request-progress');const step=r.state==='completed'?3:r.state==='approved'||r.level>1?2:r.state==='pending'?0:1;['Soumission','Analyse','Réflexion','Clôture'].forEach((label,i)=>{const li=node('li',label);if(i<=step)li.className='reached';if(i===step)li.setAttribute('aria-current','step');progress.append(li);});card.append(progress);}if(r.state==='completed'){const finish=node('div','','closure-summary');finish.append(node('h3',teacher?'Synthèse de l’apprentissage':'Bravo, tu as eu le déclic !'),node('p',teacher?'Compréhension déclarée — aucune note attribuée.':'Tu as terminé ton accompagnement. L’IA te guide, la solution vient de toi.'));if(r.closure){finish.append(node('p',r.closure.confidence==='autonomous'?'Je peux expliquer et corriger mon erreur seul.':'J’ai compris l’essentiel.'),node('h4','Synthèse personnelle'),node('p',r.closure.reflection,'closure-reflection'));}finish.append(node('small',r.history.length+'/3 niveaux utilisés · '+r.history.length+' réponses validées · '+(r.reported?'Erreur signalée':'Aucun signalement')));card.append(finish);}
   if(r.reported)card.append(node('p','Erreur signalée à l’enseignant.','supervision-diagnostic'));
   if(r.history?.length){
+   const historyContainer=r.state==='completed'?document.createElement('details'):node('div','');if(r.state==='completed')historyContainer.append(node('summary','Consulter le parcours pédagogique'));card.append(historyContainer);
    for(const turn of r.history){
-    card.append(node('h4','Question socratique — niveau '+turn.level),node('p',turn.question,'dialogue-question'));
-    const details=document.createElement('details');details.append(node('summary','Afficher l’indice — niveau '+turn.level),node('p',turn.indice));card.append(details);
-    if(turn.student)card.append(node('p',turn.student.action==='reply'?'Étudiant : '+turn.student.text:'Étudiant : demande d’un indice suivant','dialogue-reply'));
+    historyContainer.append(node('h4','Question socratique — niveau '+turn.level),node('p',turn.question,'dialogue-question'));
+    const details=document.createElement('details');details.append(node('summary','Afficher l’indice — niveau '+turn.level),node('p',turn.indice));historyContainer.append(details);
+    if(turn.student)historyContainer.append(node('p',turn.student.action==='reply'?'Étudiant : '+turn.student.text:'Étudiant : demande d’un indice suivant','dialogue-reply'));
    }
   }
   if(!teacher){
@@ -40,10 +42,10 @@ async function load(){
      button(card,'Répondre',()=>act('reply',{text:t.value,fictif:check.checked}));
      button(card,'Indice suivant',()=>act('hint'));
     }else card.append(node('p','Trois niveaux atteints. Demande une aide directe à ton enseignant si nécessaire.'));
-    button(card,'J’ai compris',()=>act('understood'));
+    const closure=node('div','','closure-form');closure.hidden=true;closure.append(node('h3','Tu as eu le déclic ?'),node('p','Explique avec tes propres mots l’origine de ton erreur et comment tu comptes la corriger.'));const label=node('label','Ce que je retiens');const reflection=document.createElement('textarea');reflection.maxLength=1000;reflection.rows=4;label.append(reflection);closure.append(label);const count=node('small','0/1000 caractères');reflection.addEventListener('input',()=>{count.textContent=reflection.value.length+'/1000 caractères';});closure.append(count);const field=document.createElement('fieldset');field.append(node('legend','Mon niveau de compréhension'));let confidence='';for(const [value,text] of [['help','J’ai encore besoin d’aide'],['essential','J’ai compris l’essentiel'],['autonomous','Je peux expliquer et corriger mon erreur seul']]){const l=node('label','');const radio=document.createElement('input');radio.type='radio';radio.name='confidence-'+r.id;radio.value=value;radio.addEventListener('change',()=>{confidence=value;help.hidden=value!=='help';});l.append(radio,document.createTextNode(' '+text));field.append(l);}closure.append(field);const help=node('p','Poursuis le dialogue ou demande directement de l’aide à ton enseignant.');help.hidden=true;closure.append(help);const consent=node('label','');const check=document.createElement('input');check.type='checkbox';consent.append(check,document.createTextNode(' Je confirme que ma synthèse ne contient pas de données personnelles.'));closure.append(consent);button(closure,'Terminer mon accompagnement',()=>{if(!reflection.value.trim()||!check.checked||!['essential','autonomous'].includes(confidence))throw Error('Complète la synthèse, choisis ton niveau et confirme l’absence de données personnelles.');return act('understood',{reflection:reflection.value,confidence,fictif:true});});button(closure,'Revenir au dialogue',()=>{closure.hidden=true;});button(card,'J’ai compris',()=>{closure.hidden=false;reflection.focus();});card.append(closure);
    }
    if(r.history?.length&&!r.reported)button(card,'Signaler une erreur',()=>act('report'));
-   if(r.state!=='analyzing')button(card,'Nouvelle analyse',async()=>{if(!window.confirm('Effacer ce dialogue et recommencer ?'))return;await act('new');document.querySelector('#analyse').reset();document.querySelector('#etudiant').scrollIntoView();});
+   if(r.state!=='analyzing')button(card,r.state==='completed'?'Commencer un nouvel exercice':'Nouvelle analyse',async()=>{if(!window.confirm('Effacer ce dialogue et recommencer ?'))return;await act('new');document.querySelector('#analyse').reset();document.querySelector('#etudiant').scrollIntoView();});
    if(r.state==='rejected')card.append(node('p','Demande refusée. Contacte ton enseignant.'));
    continue;
   }
@@ -59,7 +61,7 @@ async function load(){
   if(['pending','draft'].includes(r.state))button(card,'Refuser',async()=>{await api(r.id+'/decision',{action:'reject'});status.textContent='Demande refusée.';await load();});
  }
 }
-refresh.addEventListener('click',()=>run(load));
+refresh.addEventListener('click',()=>run(async()=>{status.textContent='';await load();}));
 if(!teacher){
  const form=document.querySelector('#analyse');
  const l=node('label','');const check=document.createElement('input');check.type='checkbox';l.append(check,document.createTextNode(' Je confirme : données fictives, sans données personnelles. Le code pourra être envoyé à Claude par l’enseignant.'));const target=document.querySelector('#submission-actions')||root;target.prepend(l);
