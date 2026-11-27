@@ -223,3 +223,7 @@ input[type=password]{width:100%;font:inherit;padding:.75rem;border:1px solid #66
 @media(max-width:700px){.teacher-workspace[data-view=budget] #budget .budget-overview{grid-template-columns:100px minmax(0,1fr)}.teacher-workspace[data-view=budget] #budget .budget-values .budget-ring{width:100px}.teacher-workspace[data-view=budget] #budget .budget-ring-center strong{font-size:1rem}}
 @media(max-width:480px){.journey{gap:2rem}.journey .flight{display:block;width:2rem;height:2rem;right:calc(50% - 1rem);top:auto;bottom:-2rem;transform:rotate(90deg)}}
 @media(prefers-reduced-motion:reduce){.workspace button[aria-busy=true]::after{animation:none}}
+
+@font-face{font-family:'Funnel Sans';src:url('/fonts/funnel-sans.woff2') format('woff2');font-weight:300 800;font-display:swap}
+@font-face{font-family:'Funnel Display';src:url('/fonts/funnel-display.woff2') format('woff2');font-weight:300 800;font-display:swap}
+.workspace{font-family:'Funnel Sans',Arial,sans-serif}.workspace h1,.workspace h2,.workspace h3,.workspace header strong{font-family:'Funnel Display',Arial,sans-serif}.workspace button,.workspace select,.workspace textarea:not(#code),.workspace input{font-family:inherit}
