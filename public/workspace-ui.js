@@ -22,7 +22,7 @@ const paths={overview:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',re
 function icon(key){const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),p=document.createElementNS(ns,'path');for(const [k,v] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.8','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true',class:'ui-icon'}))svg.setAttribute(k,v);p.setAttribute('d',paths[key]);svg.append(p);return svg;}
 for(const a of document.querySelectorAll('.workspace-nav [data-view]')){const label=a.textContent.replace(/^\S+\s+/,'');a.replaceChildren(icon(a.dataset.view),document.createTextNode(label));}
 document.querySelectorAll('.journey .step').forEach((n,i)=>{n.replaceChildren(icon(['submit','think','understand'][i]));const num=document.createElement('span');num.className='step-number';num.textContent='0'+(i+1);n.parentElement.append(num);});
- document.querySelectorAll('.metric').forEach((n,i)=>{n.prepend(icon(['budget','understand','requests'][i]));const small=document.createElement('small');small.textContent=['À examiner','Réponses transmises','À vérifier'][i];n.append(small);});
+ document.querySelectorAll('.metric').forEach((n,i)=>{n.prepend(icon(['budget','requests','understand','requests'][i]));const small=document.createElement('small');small.textContent=['À examiner','En cours d’accompagnement','Compréhension déclarée','À vérifier'][i];n.append(small);});
 
 const toast=(message)=>{let n=document.querySelector('.cd-toast');if(!n){n=document.createElement('div');n.className='cd-toast';n.setAttribute('role','status');document.body.append(n);}n.textContent=message;clearTimeout(n.timer);n.timer=setTimeout(()=>n.remove(),3500);};
 if(code){
