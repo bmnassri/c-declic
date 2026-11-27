@@ -7,6 +7,9 @@ status.setAttribute('role','status');
 const refresh=document.createElement('button');refresh.type='button';refresh.textContent='Actualiser les demandes';
 root.append(refresh,status,list);
 const node=(tag,text,cls)=>{const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;};
+const glyphs={layers:'M12 2 2 7l10 5 10-5-10-5ZM2 12l10 5 10-5M2 17l10 5 10-5',check:'M20 6 9 17l-5-5',flag:'M5 21V3m0 1h14l-3 5 3 5H5',cap:'M2 9l10-5 10 5-10 5-10-5Zm4 2v6q6 5 12 0v-6m4-2v7'};
+function svgIcon(name,cls){const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),p=document.createElementNS(ns,'path');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('class',cls);svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');p.setAttribute('d',glyphs[name]);svg.append(p);return svg;}
+const verdicts={confirmed:'Compréhension confirmée',clarify:'Compréhension à consolider',help:'Accompagnement complémentaire conseillé'};
 async function api(url,body){
  const r=await fetch('/api/supervision/'+url,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  if(r.status===401){location.assign('/connexion');throw Error('Session expirée.');}
@@ -14,7 +17,7 @@ async function api(url,body){
 }
 let busy=false;
 async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true');});try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy');});}}
-function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude','Commencer un nouvel exercice','Terminer mon accompagnement'].includes(label))b.classList.add('primary');if(label==='Commencer un nouvel exercice')b.classList.add('new-exercise');if(label==='Signaler une erreur')b.classList.add('report-action');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
+function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude','Commencer un nouvel exercice','Terminer mon accompagnement','Transmettre mon retour pédagogique'].includes(label))b.classList.add('primary');if(label==='Commencer un nouvel exercice')b.classList.add('new-exercise');if(label==='Signaler une erreur')b.classList.add('report-action');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 const stateInfo={pending:['◷','La demande attend une intervention de l’enseignant.'],analyzing:['…','L’IA prépare un accompagnement.'],draft:['▤','L’enseignant vérifie la proposition.'],approved:['✓','La réponse est validée : place au raisonnement.'],completed:['✓','Compréhension déclarée par l’étudiant.'],rejected:['×','Contacte ton enseignant.']};
 async function load(){
@@ -27,7 +30,7 @@ async function load(){
   const heading=node('div','','request-heading');
   const celebration=r.state==='completed'&&!teacher;
   if(celebration)banner.classList.add('celebration');
-  heading.append(node('h3',celebration?'Bravo, tu as eu le déclic !':r.state==='completed'?'Accompagnement terminé':labels[r.state]||r.state),node('p',celebration?'Accompagnement terminé':stateInfo[r.state]?.[1]||''));
+  heading.append(node('h3',celebration?'Bravo pour ton travail !':r.state==='completed'?'Accompagnement terminé':labels[r.state]||r.state),node('p',celebration?'Accompagnement terminé · Compréhension déclarée':stateInfo[r.state]?.[1]||''));
   if(celebration)heading.append(node('p','L’IA te guide, la solution vient de toi.','celebration-motto'));
   banner.append(mark,heading);card.append(banner,node('small',(r.notion?r.notion+' · ':'')+'Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));
   if(r.state!=='rejected'){
@@ -37,9 +40,23 @@ async function load(){
   }
   if(r.state==='completed'){
    const finish=node('div','','closure-summary');
-   const stats=node('div','','closure-stats');for(const [value,label,symbol] of [[r.history.length+'/3','Niveaux utilisés','▤'],[String(r.history.length),'Réponses validées','✓'],[r.reported?'1':'0','Signalement','⚑']]){const tile=node('div','','closure-stat');const icon=node('span',symbol,'closure-stat-icon');icon.setAttribute('aria-hidden','true');tile.append(icon,node('strong',value),node('small',label));stats.append(tile);}finish.append(stats);
-   if(r.closure){const assessment=node('div','','closure-assessment');const icon=node('span','◇','assessment-icon');icon.setAttribute('aria-hidden','true');const copy=node('div','');copy.append(node('small',teacher?'Autoévaluation de l’étudiant':'Mon autoévaluation'),node('strong',r.closure.confidence==='autonomous'?'Je peux expliquer et corriger mon erreur seul.':'J’ai compris l’essentiel.'));assessment.append(icon,copy);finish.append(assessment,node('h4',teacher?'Synthèse de l’apprentissage':'Ma synthèse personnelle'),node('p',r.closure.reflection,'closure-reflection'));}
+   const stats=node('div','','closure-stats');for(const [value,label,symbol] of [[r.history.length+'/3','Niveaux utilisés','layers'],[String(r.history.length),'Réponses validées','check'],[r.reported?'1':'0','Signalement','flag']]){const tile=node('div','','closure-stat');const icon=svgIcon(symbol,'closure-stat-icon');tile.append(icon,node('strong',value),node('small',label));stats.append(tile);}finish.append(stats);
+   if(r.closure){const assessment=node('div','','closure-assessment');const icon=svgIcon('cap','assessment-icon');const copy=node('div','');copy.append(node('small',teacher?'Autoévaluation de l’étudiant':'Mon autoévaluation'),node('strong',r.closure.confidence==='autonomous'?'Je peux expliquer et corriger mon erreur seul.':'J’ai compris l’essentiel.'));assessment.append(icon,copy);finish.append(assessment,node('h4',teacher?'Synthèse de l’apprentissage':'Ma synthèse personnelle'),node('p',r.closure.reflection,'closure-reflection'));}
    if(teacher)finish.append(node('small','Compréhension déclarée — aucune note attribuée.'));
+   if(r.closure){
+    const panel=node('section','','feedback-panel');panel.dataset.verdict=r.feedback?.verdict||'waiting';
+    panel.append(node('h4','Retour pédagogique de l’enseignant'));
+    if(r.feedback){panel.append(node('strong',verdicts[r.feedback.verdict]),node('p',r.feedback.comment||'L’enseignant a confirmé ta compréhension.','feedback-comment'));}
+    else panel.append(node('p','Compréhension déclarée — retour enseignant facultatif, non encore transmis.'));
+    if(teacher){
+     const field=document.createElement('fieldset');field.append(node('legend',r.feedback?'Modifier le retour':'Choisir un retour pédagogique'));let verdict=r.feedback?.verdict||'';
+     for(const [value,label] of Object.entries(verdicts)){const l=node('label','');const radio=document.createElement('input');radio.type='radio';radio.name='feedback-'+r.id;radio.value=value;radio.checked=verdict===value;radio.addEventListener('change',()=>{verdict=value;});l.append(radio,document.createTextNode(' '+label));field.append(l);}panel.append(field);
+     const label=node('label','Commentaire pédagogique (1000 caractères maximum)');const comment=document.createElement('textarea');comment.rows=3;comment.maxLength=1000;comment.value=r.feedback?.comment||'';label.append(comment);panel.append(label);
+     const consent=node('label','');const check=document.createElement('input');check.type='checkbox';consent.append(check,document.createTextNode(' Je confirme l’absence de données personnelles.'));panel.append(consent);
+     button(panel,'Transmettre mon retour pédagogique',async()=>{if(!verdict||!check.checked||(!comment.value.trim()&&verdict!=='confirmed'))throw Error('Choisis un retour, complète le commentaire si nécessaire et confirme l’absence de données personnelles.');await api(r.id+'/feedback',{verdict,comment:comment.value,confirm:true});status.textContent='Retour pédagogique transmis.';await load();});
+    }else if(r.feedback&&r.feedback.verdict!=='confirmed')panel.append(node('p','Tu peux demander une aide directe à ton enseignant ou commencer un nouvel exercice.'));
+    panel.append(node('small','Retour temporaire · Aucune note attribuée'));finish.append(panel);
+   }
    card.append(finish);
   }
   if(r.reported)card.append(node('p','Erreur signalée à l’enseignant.','supervision-diagnostic'));
@@ -52,7 +69,7 @@ async function load(){
    }
   }
   if(!teacher){
-   const act=async(action,extra={})=>{const d=await api(r.id+'/dialogue',{action,...extra});status.textContent=d.message;await load();};
+   const act=async(action,extra={})=>{const d=await api(r.id+'/dialogue',{action,...extra});status.textContent=action==='understood'?'':d.message;await load();};
    if(r.state==='approved'){
     if(!r.history?.length){card.append(node('h4','Question socratique'),node('p',r.question,'dialogue-question'));const details=document.createElement('details');details.append(node('summary','Je suis bloqué : afficher l’indice'),node('p',r.indice));card.append(details);}
     if((r.history?.length||0)<3){
