@@ -1,6 +1,5 @@
 'use strict';
 const { Pool } = require('pg');
-const limit = 20;
 const budget=require('./budget');
 function db(){return pool ||= new Pool({connectionString:process.env.DATABASE_URL,connectionTimeoutMillis:5000,query_timeout:5000,max:2});}
 let pool;
@@ -58,10 +57,10 @@ function handler(notions) { return async (req,res) => {
       if(!reason && Object.values(structured).some(v=>/\x60{3}|^\s*~~~|^\s*#{1,6}\s/m.test(v))) reason='block';
       if(reason){
         console.warn('[AI_FORMAT]',reason);
-        return res.status(502).json({message:'Brouillon IA non conforme au format pédagogique ('+reason+'). Tentative comptabilisée. Restantes : '+(limit-q.rows[0].attempts)+'.',remaining:limit-q.rows[0].attempts});
+        return res.status(502).json({message:'Brouillon IA non conforme au format pédagogique ('+reason+'). Tentative comptabilisée. Restantes : '+(pricing.limit-q.rows[0].attempts)+'.',remaining:pricing.limit-q.rows[0].attempts});
       }
       const plain=v=>v.replace(/\x60([^\x60\r\n]+)\x60/g,'$1').replace(/\*\*([^*\r\n]+)\*\*/g,'$1').trim();
-      res.json({answer:Object.fromEntries(Object.keys(fields).map(k=>[k,plain(structured[k])])),remaining:limit-q.rows[0].attempts});
+      res.json({answer:Object.fromEntries(Object.keys(fields).map(k=>[k,plain(structured[k])])),remaining:pricing.limit-q.rows[0].attempts});
     } catch { console.warn('[AI_PILOT] Échec technique'); res.status(503).json({message:'Analyse indisponible. Vérifie PostgreSQL et la configuration API.'}); }
     finally {busy=false;}
   };
