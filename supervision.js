@@ -9,7 +9,7 @@ module.exports=function(app,sameOrigin,requireRole,notions,session){
  setInterval(sweep,30000).unref();
  const guard=(req,res,next)=>{sweep();if(!enabled())return res.status(503).json({message:'Pilote de supervision désactivé.'});next();};
  const student=requireRole('student'),teacher=requireRole('teacher');
- const publicView=r=>({id:r.id,state:r.state,expires:r.expires,level:r.level||1,history:r.history||[],reported:!!r.reported,...(r.state==='approved'?{question:r.approved.question,indice:r.approved.indice}:{})});
+ const publicView=r=>({id:r.id,state:r.state,expires:r.expires,level:r.level||1,history:r.history||[],reported:!!r.reported,closure:r.closure,notion:r.notion,...(r.state==='approved'?{question:r.approved.question,indice:r.approved.indice}:{})});
  app.get('/api/supervision/mes-demandes',student,guard,(req,res)=>res.json({requests:[...requests.values()].filter(r=>r.owner===session(req)).map(publicView)}));
  app.post('/api/supervision/demandes',sameOrigin,student,guard,(req,res)=>{
   const b=req.body,rules={notion:100,enonce:2000,code:6000,erreur:1000,question:1000};
@@ -17,7 +17,7 @@ module.exports=function(app,sameOrigin,requireRole,notions,session){
   const owner=session(req);
   if(requests.size>=100||[...requests.values()].filter(r=>r.owner===owner).length>=3)return res.status(429).json({message:'Limite temporaire atteinte (3 demandes par session).'});
   const id=crypto.randomUUID();
-  requests.set(id,{id,owner,expires:Math.min(Date.now()+ttl,owner.expires),state:'pending',level:1,history:[],input:{...Object.fromEntries(Object.keys(rules).map(k=>[k,b[k]])),fictif:true}});
+  requests.set(id,{id,owner,expires:Math.min(Date.now()+ttl,owner.expires),state:'pending',notion:b.notion,level:1,history:[],input:{...Object.fromEntries(Object.keys(rules).map(k=>[k,b[k]])),fictif:true}});
   res.status(201).json({message:'Demande transmise à l’enseignant.',id});
  });
  app.post('/api/supervision/:id/dialogue',sameOrigin,student,guard,(req,res)=>{
@@ -26,7 +26,7 @@ module.exports=function(app,sameOrigin,requireRole,notions,session){
   if(b?.action==='report'&&r.history.length){r.reported=true;return res.json({message:'Signalement transmis à l’enseignant.'});}
   if(b?.action==='new'&&r.state!=='analyzing'){requests.delete(r.id);return res.json({message:'Nouvelle analyse : complète le formulaire.'});}
   if(r.state!=='approved')return res.status(409).json({message:'Attends la validation de l’enseignant.'});
-  if(b?.action==='understood'){r.state='completed';delete r.input;delete r.approved;return res.json({message:'Accompagnement terminé.'});}
+  if(b?.action==='understood'){if(b.fictif!==true||typeof b.reflection!=='string'||!b.reflection.trim()||b.reflection.length>1000||!['essential','autonomous'].includes(b.confidence))return res.status(400).json({message:'Synthèse de 1 à 1000 caractères, autoévaluation et confirmation requises.'});r.closure={reflection:b.reflection.trim(),confidence:b.confidence};r.state='completed';delete r.input;delete r.approved;return res.json({message:'Accompagnement terminé.'});}
   if(!['reply','hint'].includes(b?.action)||r.history.length>=3)return res.status(400).json({message:'Maximum de trois réponses validées par demande.'});
   if(b.action==='reply'&&(b.fictif!==true||typeof b.text!=='string'||!b.text.trim()||b.text.length>1000))return res.status(400).json({message:'Réponse de 1 à 1000 caractères, sans données personnelles, requise.'});
   r.level=Math.min(3,r.level+1);
@@ -35,7 +35,7 @@ module.exports=function(app,sameOrigin,requireRole,notions,session){
   delete r.approved;r.state='pending';
   res.json({message:'Nouvel échange transmis à l’enseignant.'});
  });
- app.get('/api/supervision/enseignant',teacher,guard,(req,res)=>res.json({requests:[...requests.values()].map(({id,state,input,draft,expires,level,history,reported,followup})=>({id,state,input,draft,expires,level,history,reported,followup}))}));
+ app.get('/api/supervision/enseignant',teacher,guard,(req,res)=>res.json({requests:[...requests.values()].map(({id,state,input,draft,expires,level,history,reported,followup,closure,notion})=>({id,state,input,draft,expires,level,history,reported,followup,closure,notion}))}));
  app.post('/api/supervision/:id/analyser',sameOrigin,teacher,guard,async(req,res)=>{
   const r=requests.get(req.params.id);
   if(!r||r.state!=='pending')return res.status(409).json({message:'Demande indisponible.'});
