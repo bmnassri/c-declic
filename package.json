@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "express": "^5.1.0",
-    "pg": "^8.13.0"
+    "pg": "^8.13.0",
+    "@fontsource-variable/funnel-sans": "^5.2.0",
+    "@fontsource-variable/funnel-display": "^5.2.0"
   }
 }
