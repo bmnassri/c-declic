@@ -69,7 +69,7 @@ run('Dialogue complet: trois validations, confidentialité et signalement',async
  await status(prefix+'/dialogue',student,{action:'hint'},400);
  await status(prefix+'/dialogue',student,{action:'report'},200);
  assert.equal((await status('/api/supervision/enseignant',teacher,undefined,200)).requests.find(r=>r.id===id).reported,true);
- await status(prefix+'/dialogue',student,{action:'understood'},200);assert.equal((await view()).state,'completed');
+ await status(prefix+'/dialogue',student,{action:'understood'},400);await status(prefix+'/dialogue',student,{action:'understood',reflection:'Test fictif',confidence:'help',fictif:true},400);await status(prefix+'/dialogue',student,{action:'understood',reflection:'Les indices commencent à zéro.',confidence:'autonomous',fictif:true},200);assert.equal((await view()).state,'completed');assert.equal((await view()).closure.confidence,'autonomous');
  await status(prefix+'/dialogue',student,{action:'new'},200);assert.equal(await view(),undefined);
 });
 run('Claude simulé: erreurs, format et taille',async()=>{
