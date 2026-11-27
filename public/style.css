@@ -196,3 +196,30 @@ input[type=password]{width:100%;font:inherit;padding:.75rem;border:1px solid #66
 @media(max-width:1050px){.teacher-workspace main{min-height:0}.teacher-workspace main>.workspace-nav{justify-content:center}.teacher-workspace main>.hero{padding-top:1rem}}
 @media(max-width:850px){.login-workspace main{gap:0}.login-workspace main>.hero{border-radius:18px 18px 0 0}.login-workspace main>#etudiant{border-radius:0 0 18px 18px;padding:1.25rem}.workspace .form-context,.workspace .form-code{height:auto}.student-workspace .hero{padding:1.25rem}.student-workspace .hero-art svg{max-width:180px}}
 @media(max-width:700px){.teacher-workspace[data-view=overview] #budget .budget-values,#budget .budget-values{grid-template-columns:1fr}.teacher-workspace #budget .budget-overview{grid-template-columns:100px minmax(0,1fr)}.teacher-workspace #budget .budget-values .budget-ring{width:100px}.workspace .actions button{min-height:44px}.workspace #supervision .dialogue-question,.workspace #supervision details{max-width:100%}.teacher-workspace .workspace-nav a{font-size:.85rem;padding:.5rem}.workspace header{gap:.5rem}.workspace .metric small{font-size:.7rem}}
+
+/* Final polish */
+.editor-title span:first-child::before{content:none}
+.mac-dots{display:inline-flex;gap:6px;margin-right:12px;vertical-align:middle}
+.mac-dots i{width:10px;height:10px;border-radius:50%;background:#FF5F57}
+.mac-dots i:nth-child(2){background:#FEBC2E}.mac-dots i:nth-child(3){background:#28C840}
+.editor-title .copy-code{font:inherit;color:#DFFAFF;background:transparent;border:1px solid #40B7BF;padding:.25rem .5rem;margin:0 0 0 auto}
+.editor-title>span:last-child{margin-left:1rem}
+.editor-lines .active-line{display:block;color:white;background:#005157}
+.editor-lines span{display:block}
+.editor-footer{gap:1rem;flex-wrap:wrap}
+.student-workspace .hero h1{max-width:none}
+@media(min-width:1200px){.student-workspace .hero{grid-template-columns:minmax(0,1fr) 190px}.student-workspace .hero h1{font-size:clamp(2rem,3vw,2.85rem);white-space:nowrap}}
+.journey{gap:3.5rem}.journey article{overflow:visible}.journey .flight{position:absolute;width:3.5rem;height:40px;right:-3.5rem;top:calc(50% - 20px);color:#005157;pointer-events:none}
+.field-count{font-size:.75rem;color:#005157;text-align:right;margin:.2rem 0 .4rem;font-variant-numeric:tabular-nums}
+.workspace .form-context textarea{flex:1;min-height:5rem}
+.workspace button:disabled{cursor:wait}.workspace button[aria-busy=true]::after{content:'';display:inline-block;width:.8em;height:.8em;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-left:.5em;animation:cd-spin .8s linear infinite}
+@keyframes cd-spin{to{transform:rotate(360deg)}}
+.workspace .metric{position:relative;padding:1rem 1rem 1rem 4.5rem;min-height:100px;align-content:center}.workspace .metric>.ui-icon{position:absolute;left:1rem;top:1rem;width:2.6rem;height:2.6rem;padding:.55rem;border-radius:12px;background:#ffffffa0;color:#005157}.workspace .metric strong{font-size:2rem;line-height:1.1}
+.workspace .empty-state{display:grid;justify-items:center;gap:.45rem;padding:1.25rem}.empty-state .ui-icon{width:2.5rem;height:2.5rem;margin:0;color:#005157}.empty-state small{color:#005157}
+.teacher-workspace[data-view=budget] #budget .budget-overview{grid-template-columns:150px minmax(0,1fr)}.teacher-workspace[data-view=budget] #budget .budget-values .budget-ring{width:150px}.teacher-workspace[data-view=budget] #budget .budget-ring-center strong{font-size:1.25rem}
+.workspace-nav .nav-count{margin-left:auto;background:#FFA64D;color:#002124;border-radius:999px;padding:.1rem .5rem;font-size:.75rem}.workspace-nav a{display:flex;align-items:center}.workspace-nav .nav-version{margin-top:auto;color:#C1E7E3;font-size:.8rem;padding:.8rem}.workspace-nav a[aria-current=page]{box-shadow:inset 3px 0 #78CCFF}
+.cd-toast{position:fixed;bottom:1rem;right:1rem;z-index:20;background:#002124;color:white;padding:.8rem 1rem;border-radius:10px;max-width:min(360px,90vw);box-shadow:0 4px 20px #00212433}
+@media(max-width:850px){.journey{gap:1rem}.journey .flight{display:none}.student-workspace .hero h1{white-space:normal}.workspace .metric{padding: .7rem}.workspace .metric>.ui-icon{position:static;width:2rem;height:2rem}.workspace-nav .nav-version{margin:0}}
+@media(max-width:700px){.teacher-workspace[data-view=budget] #budget .budget-overview{grid-template-columns:100px minmax(0,1fr)}.teacher-workspace[data-view=budget] #budget .budget-values .budget-ring{width:100px}.teacher-workspace[data-view=budget] #budget .budget-ring-center strong{font-size:1rem}}
+@media(max-width:480px){.journey{gap:2rem}.journey .flight{display:block;width:2rem;height:2rem;right:calc(50% - 1rem);top:auto;bottom:-2rem;transform:rotate(90deg)}}
+@media(prefers-reduced-motion:reduce){.workspace button[aria-busy=true]::after{animation:none}}
