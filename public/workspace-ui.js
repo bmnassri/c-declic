@@ -42,7 +42,7 @@ for(const n of document.querySelectorAll('#status,#status-ia,#supervision [role=
 
 if(!document.body.classList.contains('teacher-workspace'))return;
 const nav=[...document.querySelectorAll('.workspace-nav [data-view]')], heading=document.querySelector('#workspace-heading');
-const version=document.createElement('div');version.className='nav-version';version.textContent='Pilote · Interface V1.1';nav[0].parentElement.append(version);
+const version=document.createElement('div');version.className='nav-version';version.textContent='Pilote · Interface V1.2';nav[0].parentElement.append(version);
 const badge=document.createElement('span');badge.className='nav-count';nav.find(a=>a.dataset.view==='requests').append(badge);const pending=document.getElementById('metric-pending');const refreshBadge=()=>{badge.textContent=pending.textContent;badge.hidden=!Number(pending.textContent);};new MutationObserver(refreshBadge).observe(pending,{childList:true,characterData:true,subtree:true});refreshBadge();
 const subtitles={overview:'Retrouve les demandes et les ressources du pilote.',requests:'Examine les demandes et valide les réponses avant transmission.',budget:'Surveille les coûts estimés et le quota mensuel.',lab:'Teste les brouillons pédagogiques sans transmission aux étudiants.'};
 const views={overview:['Tableau de bord','overview-metrics','supervision','budget'],requests:['Supervision pédagogique','supervision'],budget:['Pilotage financier','budget'],lab:['Laboratoire IA','etudiant']};
