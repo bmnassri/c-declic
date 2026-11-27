@@ -14,7 +14,7 @@ const answer={diagnostic:'Diagnostic réservé',question:'Que remarques-tu ?',in
 before(async()=>{
  if(!enabled)return;
  assert.equal(process.env.CDECLIC_TEST_DATABASE_URL,url,'Base locale de test obligatoire');
- Object.assign(process.env,{DATABASE_URL:url,ANTHROPIC_API_KEY:'fake-test-key',ANTHROPIC_MODEL:'test-model',AI_BUDGET_MODEL:'test-model',AI_INPUT_EUR_PER_MTOK:'4',AI_OUTPUT_EUR_PER_MTOK:'20',AI_INPUT_TOKEN_CEILING:'16000',AI_PILOT_ENABLED:'true',SUPERVISION_PILOT_ENABLED:'true',APP_PASSWORD:'test-student-only',TEACHER_PASSWORD:'test-teacher-only',SESSION_SECRET:'test-only-not-production-1234567890',NODE_ENV:'test'});
+ Object.assign(process.env,{DATABASE_URL:url,ANTHROPIC_API_KEY:'fake-test-key',ANTHROPIC_MODEL:'test-model',AI_BUDGET_MODEL:'test-model',AI_INPUT_EUR_PER_MTOK:'4',AI_OUTPUT_EUR_PER_MTOK:'20',AI_INPUT_TOKEN_CEILING:'16000',AI_MONTHLY_ATTEMPT_LIMIT:'40',AI_PILOT_ENABLED:'true',SUPERVISION_PILOT_ENABLED:'true',APP_PASSWORD:'test-student-only',TEACHER_PASSWORD:'test-teacher-only',SESSION_SECRET:'test-only-not-production-1234567890',NODE_ENV:'test'});
  delete process.env.RAILWAY_ENVIRONMENT;delete process.env.RAILWAY_PUBLIC_DOMAIN;
  pool=new Pool({connectionString:url,max:8});
  await budget.snapshot(pool,month);
@@ -41,13 +41,14 @@ run('PostgreSQL: réservation, règlement, incertitude et persistance',async()=>
  await budget.settle(pool,m,c,{input_tokens:499,output_tokens:232});
  assert.equal((await budget.reserve(pool,m,c)).rowCount,1);
  await budget.settle(pool,m,c,{});
+ assert.equal((await budget.snapshot(pool,m)).limit,40);
  const fresh=new Pool({connectionString:url});try{const d=await budget.snapshot(fresh,m);assert.equal(d.spent,0.006636);assert.equal(d.held,0.076);assert.equal(d.attempts,2);assert.equal(d.inputTokens,499);assert.equal(d.outputTokens,232);assert.equal((await budget.snapshot(fresh,'2090-02')).remaining,10);}finally{await fresh.end();}
 });
 run('PostgreSQL: concurrence et plafond',async()=>{
  const m='2090-03',c=budget.config();await budget.reserve(pool,m,c);
- await pool.query('UPDATE ai_pilot_quota SET attempts=19,tracked=19,held_micro=0 WHERE month=$1',[m]);
+ await pool.query('UPDATE ai_pilot_quota SET attempts=39,tracked=39,held_micro=0 WHERE month=$1',[m]);
  const results=await Promise.all(Array.from({length:6},()=>budget.reserve(pool,m,c)));
- assert.equal(results.reduce((n,r)=>n+r.rowCount,0),1);assert.equal((await budget.snapshot(pool,m)).attempts,20);
+ assert.equal(results.reduce((n,r)=>n+r.rowCount,0),1);assert.equal((await budget.snapshot(pool,m)).attempts,40);
  const n='2090-04';await budget.reserve(pool,n,c);await pool.query('UPDATE ai_pilot_quota SET spent_micro=9950000,held_micro=0 WHERE month=$1',[n]);
  assert.equal((await budget.reserve(pool,n,c)).rowCount,0);assert.equal((await budget.snapshot(pool,n)).blocked,true);
 });
@@ -94,7 +95,7 @@ run('Claude simulé: erreurs, format et taille',async()=>{
  mode='ok';
 });
 run('Blocage avant tout appel fournisseur et accès budget',async()=>{
- const path='/api/enseignant/analyser';await pool.query('UPDATE ai_pilot_quota SET attempts=20,tracked=20 WHERE month=$1',[month]);const n=calls.length;
+ const path='/api/enseignant/analyser';await pool.query('UPDATE ai_pilot_quota SET attempts=40,tracked=40 WHERE month=$1',[month]);const n=calls.length;
  await status(path,teacher,fixture,429);assert.equal(calls.length,n);
  assert.equal((await req('/api/enseignant/budget',student)).status,403);
  assert.equal((await status('/api/enseignant/budget',teacher,undefined,200)).blocked,true);
