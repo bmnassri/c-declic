@@ -71,6 +71,9 @@ app.post('/deconnexion',sameOrigin,(req,res)=>{revoke(req);cookie(res,'',0);res.
 app.get('/',requireRole('student'),(req,res)=>res.sendFile(path.join(pages,'index.html')));
 app.get('/enseignant',requireRole('teacher'),(req,res)=>res.sendFile(path.join(pages,'teacher.html')));
 app.get('/index.html',requireRole('student'),(req,res)=>res.redirect('/'));
+for(const family of ['funnel-sans','funnel-display']){
+ app.get('/fonts/'+family+'.woff2',(req,res)=>res.sendFile(path.join(__dirname,'node_modules','@fontsource-variable',family,'files',family+'-latin-wght-normal.woff2')));
+}
 app.use(express.static(path.join(__dirname,'public'),{index:false,redirect:false}));
 app.post('/api/analyser',sameOrigin,requireRole('student'),(req,res)=>{
   res.set('Cache-Control','no-store');
