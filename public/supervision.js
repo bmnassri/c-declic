@@ -16,12 +16,14 @@ async function api(url,body){
  const d=await r.json();if(!r.ok)throw Error(d.message||'Action refusée.');return d;
 }
 let busy=false;
+const completedPanels=new Map();
+function renderStudentFeedback(panel,feedback){panel.dataset.verdict=feedback?.verdict||'waiting';panel.replaceChildren(node('h4','Retour pédagogique de l’enseignant'));if(feedback){panel.append(node('strong',verdicts[feedback.verdict]),node('p',feedback.comment||'L’enseignant a confirmé ta compréhension.','feedback-comment'));if(feedback.verdict!=='confirmed')panel.append(node('p','Tu peux demander une aide directe à ton enseignant ou commencer un nouvel exercice.'));}else panel.append(node('p','Compréhension déclarée — retour enseignant facultatif, non encore transmis.'));panel.append(node('small','Retour temporaire · Aucune note attribuée'));}
 async function run(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('#supervision button,#submission-actions button')].filter(b=>!b.disabled);buttons.forEach(b=>{b.disabled=true;b.setAttribute('aria-busy','true');});try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;buttons.forEach(b=>{b.disabled=false;b.removeAttribute('aria-busy');});}}
 function button(parent,label,fn){const b=node('button',label);b.type='button';if(['Répondre','Valider et transmettre','Analyser avec Claude','Commencer un nouvel exercice','Terminer mon accompagnement','Transmettre mon retour pédagogique'].includes(label))b.classList.add('primary');if(label==='Commencer un nouvel exercice')b.classList.add('new-exercise');if(label==='Signaler une erreur')b.classList.add('report-action');if(label==='Indice suivant')b.classList.add('hint-action');b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 const stateInfo={pending:['◷','La demande attend une intervention de l’enseignant.'],analyzing:['…','L’IA prépare un accompagnement.'],draft:['▤','L’enseignant vérifie la proposition.'],approved:['✓','La réponse est validée : place au raisonnement.'],completed:['✓','Compréhension déclarée par l’étudiant.'],rejected:['×','Contacte ton enseignant.']};
 async function load(){
- const d=await api(teacher?'enseignant':'mes-demandes');list.replaceChildren();
+ const d=await api(teacher?'enseignant':'mes-demandes');list.replaceChildren();completedPanels.clear();
  if(teacher){for(const [id,count] of [['metric-pending',d.requests.filter(r=>['pending','analyzing','draft'].includes(r.state)).length],['metric-approved',d.requests.filter(r=>r.state==='approved').length],['metric-completed',d.requests.filter(r=>r.state==='completed').length],['metric-reported',d.requests.filter(r=>r.reported).length]]){const el=document.getElementById(id);if(el)el.textContent=String(count);}} if(!d.requests.length)list.append(node('p','Aucune demande pour le moment.','empty-state'));
  for(const r of d.requests){
   const card=node('article','','supervision-card');card.dataset.state=r.state;list.append(card);
@@ -49,13 +51,17 @@ async function load(){
     if(r.feedback){panel.append(node('strong',verdicts[r.feedback.verdict]),node('p',r.feedback.comment||'L’enseignant a confirmé ta compréhension.','feedback-comment'));}
     else panel.append(node('p','Compréhension déclarée — retour enseignant facultatif, non encore transmis.'));
     if(teacher){
+     const editor=node('div','','feedback-editor');editor.hidden=!!r.feedback;
+     if(r.feedback){const receipt=node('div','','feedback-receipt');receipt.append(svgIcon('check','feedback-receipt-icon'),node('strong','Retour pédagogique transmis'),node('p','Le retour est disponible dans l’espace étudiant.'));panel.prepend(receipt);const toggle=node('button','Modifier mon retour');toggle.type='button';toggle.setAttribute('aria-expanded','false');toggle.addEventListener('click',()=>{editor.hidden=!editor.hidden;toggle.setAttribute('aria-expanded',String(!editor.hidden));toggle.textContent=editor.hidden?'Modifier mon retour':'Annuler la modification';if(!editor.hidden)editor.querySelector('input')?.focus();});panel.append(toggle);}
+     panel.append(editor);
      const field=document.createElement('fieldset');field.append(node('legend',r.feedback?'Modifier le retour':'Choisir un retour pédagogique'));let verdict=r.feedback?.verdict||'';
-     for(const [value,label] of Object.entries(verdicts)){const l=node('label','');const radio=document.createElement('input');radio.type='radio';radio.name='feedback-'+r.id;radio.value=value;radio.checked=verdict===value;radio.addEventListener('change',()=>{verdict=value;});l.append(radio,document.createTextNode(' '+label));field.append(l);}panel.append(field);
-     const label=node('label','Commentaire pédagogique (1000 caractères maximum)');const comment=document.createElement('textarea');comment.rows=3;comment.maxLength=1000;comment.value=r.feedback?.comment||'';label.append(comment);panel.append(label);
-     const consent=node('label','');const check=document.createElement('input');check.type='checkbox';consent.append(check,document.createTextNode(' Je confirme l’absence de données personnelles.'));panel.append(consent);
-     button(panel,'Transmettre mon retour pédagogique',async()=>{if(!verdict||!check.checked||(!comment.value.trim()&&verdict!=='confirmed'))throw Error('Choisis un retour, complète le commentaire si nécessaire et confirme l’absence de données personnelles.');await api(r.id+'/feedback',{verdict,comment:comment.value,confirm:true});status.textContent='Retour pédagogique transmis.';await load();});
-    }else if(r.feedback&&r.feedback.verdict!=='confirmed')panel.append(node('p','Tu peux demander une aide directe à ton enseignant ou commencer un nouvel exercice.'));
-    panel.append(node('small','Retour temporaire · Aucune note attribuée'));finish.append(panel);
+     for(const [value,label] of Object.entries(verdicts)){const l=node('label','');const radio=document.createElement('input');radio.type='radio';radio.name='feedback-'+r.id;radio.value=value;radio.checked=verdict===value;radio.addEventListener('change',()=>{verdict=value;});l.append(radio,document.createTextNode(' '+label));field.append(l);}editor.append(field);
+     const label=node('label','Commentaire pédagogique (1000 caractères maximum)');const comment=document.createElement('textarea');comment.rows=3;comment.maxLength=1000;comment.value=r.feedback?.comment||'';label.append(comment);editor.append(label);const count=node('small',comment.value.length+'/1000 caractères');comment.addEventListener('input',()=>{count.textContent=comment.value.length+'/1000 caractères';});editor.append(count);
+     const consent=node('label','');const check=document.createElement('input');check.type='checkbox';consent.append(check,document.createTextNode(' Je confirme l’absence de données personnelles.'));editor.append(consent);
+     button(editor,'Transmettre mon retour pédagogique',async()=>{if(!verdict||!check.checked||(!comment.value.trim()&&verdict!=='confirmed'))throw Error('Choisis un retour, complète le commentaire si nécessaire et confirme l’absence de données personnelles.');await api(r.id+'/feedback',{verdict,comment:comment.value,confirm:true});status.textContent='Retour pédagogique transmis.';await load();});
+    }
+    if(teacher)panel.append(node('small','Retour temporaire · Aucune note attribuée'));else{renderStudentFeedback(panel,r.feedback);panel.setAttribute('aria-live','polite');completedPanels.set(r.id,{panel,signature:JSON.stringify(r.feedback??null)});}
+    finish.append(panel);
    }
    card.append(finish);
   }
@@ -105,5 +111,7 @@ if(!teacher){
  send.addEventListener('click',()=>run(async()=>{if(!form.reportValidity()||!check.checked)throw Error('Complète le formulaire et confirme les données fictives.');const b=Object.fromEntries(new FormData(form));b.fictif=true;const d=await api('demandes',b);status.textContent=d.message;await load();}));
 }
 run(load);
+let polling=false;
+if(!teacher)setInterval(async()=>{if(busy||polling||document.hidden||!completedPanels.size)return;const entries=[...completedPanels.entries()];polling=true;try{const d=await api('mes-demandes');if(busy)return;for(const [id,entry] of entries){if(completedPanels.get(id)!==entry||!entry.panel.isConnected)continue;const r=d.requests.find(x=>x.id===id);if(!r){entry.panel.closest('.supervision-card')?.remove();completedPanels.delete(id);status.textContent='Une demande temporaire a expiré.';continue;}const signature=JSON.stringify(r.feedback??null);if(signature!==entry.signature){renderStudentFeedback(entry.panel,r.feedback);entry.signature=signature;}}}catch{/* Actualisation manuelle toujours disponible. */}finally{polling=false;}},10000);
 
 })();
