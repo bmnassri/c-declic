@@ -13,12 +13,12 @@ async function api(url,body){
  const d=await r.json();if(!r.ok)throw Error(d.message||'Action refusée.');return d;
 }
 let busy=false;
-async function run(fn){if(busy)return;busy=true;root.querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;root.querySelectorAll('button').forEach(b=>b.disabled=false);}}
+async function run(fn){if(busy)return;busy=true;document.querySelectorAll('#supervision button,#submission-actions button').forEach(b=>b.disabled=true);try{await fn();}catch(e){status.textContent=e.message;}finally{busy=false;root.querySelectorAll('button').forEach(b=>b.disabled=false);}}
 function button(parent,label,fn){const b=node('button',label);b.type='button';b.addEventListener('click',()=>run(fn));parent.append(b);}
 const labels={pending:'En attente',analyzing:'Analyse en cours',draft:'En attente de validation',approved:'Validée',rejected:'Refusée',completed:'Terminée'};
 async function load(){
  const d=await api(teacher?'enseignant':'mes-demandes');list.replaceChildren();
- if(!d.requests.length)list.append(node('p','Aucune demande.'));
+ if(teacher){for(const [id,count] of [['metric-pending',d.requests.filter(r=>['pending','analyzing','draft'].includes(r.state)).length],['metric-approved',d.requests.filter(r=>['approved','completed'].includes(r.state)).length],['metric-reported',d.requests.filter(r=>r.reported).length]]){const el=document.getElementById(id);if(el)el.textContent=String(count);}} if(!d.requests.length)list.append(node('p','Aucune demande pour le moment.','empty-state'));
  for(const r of d.requests){
   const card=node('article','','supervision-card');list.append(card);
   card.append(node('h3',labels[r.state]||r.state),node('small','Expiration : '+new Date(r.expires).toLocaleTimeString('fr-FR')));
@@ -62,8 +62,8 @@ async function load(){
 refresh.addEventListener('click',()=>run(load));
 if(!teacher){
  const form=document.querySelector('#analyse');
- const l=node('label','');const check=document.createElement('input');check.type='checkbox';l.append(check,document.createTextNode(' Je confirme : données fictives, sans données personnelles. Le code pourra être envoyé à Claude par l’enseignant.'));root.prepend(l);
- const send=node('button','Envoyer à l’enseignant','primary');send.type='button';root.prepend(send);
+ const l=node('label','');const check=document.createElement('input');check.type='checkbox';l.append(check,document.createTextNode(' Je confirme : données fictives, sans données personnelles. Le code pourra être envoyé à Claude par l’enseignant.'));const target=document.querySelector('#submission-actions')||root;target.prepend(l);
+ const send=node('button','Envoyer à l’enseignant','primary');send.type='button';(target.querySelector('.actions')||target).append(send);
  send.addEventListener('click',()=>run(async()=>{if(!form.reportValidity()||!check.checked)throw Error('Complète le formulaire et confirme les données fictives.');const b=Object.fromEntries(new FormData(form));b.fictif=true;const d=await api('demandes',b);status.textContent=d.message;await load();}));
 }
 run(load);
